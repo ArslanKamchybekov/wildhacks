@@ -3,7 +3,9 @@
 import { connectToDatabase } from '@/lib/db';
 import Group, { IGroup } from '@/models/group.model';
 import Pet from '@/models/pet.model';
+import User from '@/models/user.model';
 import mongoose from 'mongoose';
+import { sendGroupInvitation } from '@/lib/email';
 
 /**
  * Get a group by ID
@@ -182,7 +184,7 @@ export async function updateGeminiRoastLevel(groupId: string, level: number): Pr
 /**
  * Add a member to a group
  */
-export async function addMemberToGroup(groupId: string, userId: string): Promise<{ 
+export async function addMemberToGroup(groupId: string, userEmail: string, inviterEmail?: string): Promise<{ 
   id: string; 
   name: string; 
   description: string;
@@ -190,6 +192,7 @@ export async function addMemberToGroup(groupId: string, userId: string): Promise
   petId: string;
   geminiRoastLevel: number;
   createdBy: string;
+  message?: string;
 } | null> {
   try {
     await connectToDatabase();
@@ -202,10 +205,41 @@ export async function addMemberToGroup(groupId: string, userId: string): Promise
     const members = JSON.parse(group.members);
     
     // Add the new member if not already in the group
-    if (!members.includes(userId)) {
-      members.push(userId);
+    if (!members.includes(userEmail)) {
+      // Check if user exists, if not create them
+      let user = await User.findOne({ email: userEmail });
+      
+      if (!user) {
+        console.log(`Creating new user with email: ${userEmail}`);
+        // Create a new user with email as both email and name
+        user = new User({
+          name: userEmail,
+          email: userEmail,
+          tickData: []
+        });
+        await user.save();
+      }
+      
+      // Add user to group
+      members.push(userEmail);
       group.members = JSON.stringify(members);
       await group.save();
+      
+      // Send invitation email
+      if (inviterEmail) {
+        try {
+          const emailResult = await sendGroupInvitation({
+            email: userEmail,
+            groupName: group.name,
+            invitedBy: inviterEmail
+          });
+          
+          console.log('Email result:', emailResult);
+        } catch (emailError) {
+          console.error('Error sending invitation email:', emailError);
+          // Continue even if email fails
+        }
+      }
     }
     
     // Return a plain serializable object
@@ -216,7 +250,8 @@ export async function addMemberToGroup(groupId: string, userId: string): Promise
       members: group.members,
       petId: group.petId ? group.petId.toString() : '',
       geminiRoastLevel: group.geminiRoastLevel || 5,
-      createdBy: group.createdBy || ''
+      createdBy: group.createdBy || '',
+      message: `User ${userEmail} added to group successfully`
     };
   } catch (error) {
     console.error('Error adding member to group:', error);

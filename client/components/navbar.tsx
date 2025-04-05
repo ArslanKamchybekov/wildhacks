@@ -4,18 +4,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Target } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useUser } from "@auth0/nextjs-auth0/client"
 
 export function Navbar() {
-  const pathname = usePathname()
-  
-  const isLoggedIn = pathname.startsWith("/dashboard") || 
-                     pathname.startsWith("/goals") || 
-                     pathname.startsWith("/pet") ||
-                     pathname.startsWith("/friends") ||
-                     pathname.startsWith("/leaderboard") ||
-                     pathname.startsWith("/settings")
+  const { user } = useUser()
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
@@ -28,7 +21,7 @@ export function Navbar() {
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          {!isLoggedIn ? (
+          {!user ? (
             <>
               <Link href="/login">
                 <Button variant="ghost" size="sm">Login</Button>

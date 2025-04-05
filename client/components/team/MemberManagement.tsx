@@ -57,7 +57,8 @@ export default function MemberManagement({
     try {
       setIsAddingMember(true);
       setErrorMessage('');
-      await addMemberToGroup(groupId, newMemberEmail);
+      // Pass the current user's email as the inviter
+      await addMemberToGroup(groupId, newMemberEmail, currentUserEmail);
       setNewMemberEmail('');
       setShowAddDialog(false);
       onMembersChange();
