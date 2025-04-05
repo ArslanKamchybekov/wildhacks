@@ -6,7 +6,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { Home, Settings, Target, Trophy, Users, Egg } from "lucide-react"
+import { Home, Settings, Target, Trophy, Users, Egg, MessageCircle } from "lucide-react"
 
 interface NavItem {
   title: string
@@ -31,14 +31,9 @@ const navItems: NavItem[] = [
     icon: Egg,
   },
   {
-    title: "Friends",
-    href: "/friends",
-    icon: Users,
-  },
-  {
-    title: "Leaderboard",
-    href: "/leaderboard",
-    icon: Trophy,
+    title: "Team",
+    href: "/team",
+    icon: MessageCircle,
   },
   {
     title: "Settings",
@@ -53,10 +48,6 @@ export function DashboardNav() {
   return (
     <ScrollArea className="h-full py-6">
       <div className="flex flex-col gap-4 px-2">
-        <div className="flex h-10 items-center gap-2 px-4 font-semibold">
-          <Target className="h-6 w-6" />
-          <span>GoalKeeper</span>
-        </div>
         <nav className="grid gap-1 px-2">
           {navItems.map((item, index) => (
             <Link

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoalKeeper Pet</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>GoalKeeper Pet</h1>
+    </div>
+    
+    <!-- Login Section (shown when not logged in) -->
+    <div id="login-section" class="section">
+      <p>Connect to your GoalKeeper account to track your productivity and keep your pet healthy!</p>
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="Enter your email">
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password">
+      </div>
+      <button id="login-btn" class="primary-btn">Login</button>
+      <p class="text-center">Don't have an account? <a href="#" id="signup-link">Sign up</a></p>
+    </div>
+    
+    <!-- Pet Status Section (shown when logged in) -->
+    <div id="pet-section" class="section hidden">
+      <div class="pet-container">
+        <img id="pet-image" src="assets/pet-normal.png" alt="Your pet">
+        <div class="health-container">
+          <div class="health-label">Health: <span id="health-value">100</span>%</div>
+          <div class="health-bar-container">
+            <div id="health-bar" class="health-bar"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stats-container">
+        <div class="stat">
+          <span class="stat-label">Productive Sites:</span>
+          <span id="productive-count" class="stat-value">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Unproductive Sites:</span>
+          <span id="unproductive-count" class="stat-value">0</span>
+        </div>
+      </div>
+      
+      <div class="goals-container">
+        <h3>Your Goals</h3>
+        <ul id="goals-list" class="goals-list">
+          <!-- Goals will be populated here -->
+        </ul>
+      </div>
+      
+      <button id="logout-btn" class="secondary-btn">Logout</button>
+    </div>
+    
+    <!-- Settings Section -->
+    <div id="settings-section" class="section hidden">
+      <h2>Settings</h2>
+      <div class="setting-group">
+        <label for="pet-type">Pet Type</label>
+        <select id="pet-type">
+          <option value="dragon">Dragon</option>
+          <option value="cat">Cat</option>
+          <option value="dog">Dog</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label for="notification-toggle">Show Notifications</label>
+        <input type="checkbox" id="notification-toggle" checked>
+      </div>
+      <button id="save-settings-btn" class="primary-btn">Save Settings</button>
+      <button id="back-btn" class="secondary-btn">Back</button>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+      <a href="https://wildhacks.vercel.app" target="_blank" class="icon-btn" title="Open GoalKeeper">🏠</a>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

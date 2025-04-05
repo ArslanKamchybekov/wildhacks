@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "GoalKeeper Pet",
+  "version": "1.0.0",
+  "description": "A pet that monitors your browsing habits and loses health when you visit unproductive sites",
+  "permissions": [
+    "tabs",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "css": ["src/content.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "assets/pet.png",
+      "48": "assets/pet.png",
+      "128": "assets/pet.png"
+    }
+  },
+  "icons": {
+    "16": "assets/pet.png",
+    "48": "assets/pet.png",
+    "128": "assets/pet.png"
+  }
+}
