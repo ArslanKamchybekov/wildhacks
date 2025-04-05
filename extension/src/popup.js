@@ -21,6 +21,24 @@ const petTypeSelect = document.getElementById('pet-type');
 const notificationToggle = document.getElementById('notification-toggle');
 const signupLink = document.getElementById('signup-link');
 
+// Settings tabs and panels
+const generalTab = document.getElementById('general-tab');
+const petTab = document.getElementById('pet-tab');
+const productivityTab = document.getElementById('productivity-tab');
+const generalSettings = document.getElementById('general-settings');
+const petSettings = document.getElementById('pet-settings');
+const productivitySettings = document.getElementById('productivity-settings');
+
+// Additional settings elements
+const themeSelect = document.getElementById('theme-select');
+const notificationFrequency = document.getElementById('notification-frequency');
+const petNameInput = document.getElementById('pet-name');
+const healthDecayRate = document.getElementById('health-decay-rate');
+const workHoursStart = document.getElementById('work-hours-start');
+const workHoursEnd = document.getElementById('work-hours-end');
+const breakInterval = document.getElementById('break-interval');
+const manageSitesBtn = document.getElementById('manage-sites-btn');
+
 // API endpoint for authentication
 const AUTH_API_ENDPOINT = 'https://wildhacks.vercel.app/api/auth';
 const USER_API_ENDPOINT = 'https://wildhacks.vercel.app/api/user';

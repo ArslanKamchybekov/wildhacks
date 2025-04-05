@@ -60,7 +60,8 @@ export function GroupCreation({ userId, onGroupCreated }: GroupCreationProps) {
       
       const group = await createGroup({
         name: groupName,
-        members
+        members,
+        createdBy: userId
       })
       
       // The group object now has an id field (serialized from the server action)
