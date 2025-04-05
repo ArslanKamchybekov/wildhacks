@@ -52,7 +52,7 @@ export async function sendGroupInvitation({
   email,
   groupName,
   invitedBy,
-  loginUrl = 'http://localhost:3000/login',
+  loginUrl = 'http://localhost:3000/api/auth/login',
 }: {
   email: string;
   groupName: string;

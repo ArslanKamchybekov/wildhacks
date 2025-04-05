@@ -23,11 +23,8 @@ export function Navbar() {
           <ThemeToggle />
           {!user ? (
             <>
-              <Link href="/login">
+              <Link href="/api/auth/login">
                 <Button variant="ghost" size="sm">Login</Button>
-              </Link>
-              <Link href="/signup">
-                <Button size="sm">Sign Up</Button>
               </Link>
             </>
           ) : (
