@@ -2,6 +2,7 @@
 
 import { connectToDatabase } from "@/lib/db";
 import User, { IUser } from "@/models/user.model";
+import router from "next/navigation";
 
 // Helper function to serialize a user document
 function serializeUser(user: any): any {
@@ -63,6 +64,7 @@ export async function createUser(userData: { name: string; email: string; tickDa
     }
     const user = new User(userData);
     const savedUser = await user.save();
+    router.redirect("/onboarding");
     return serializeUser(savedUser);
   } catch (error) {
     console.error('Error creating user:', error);

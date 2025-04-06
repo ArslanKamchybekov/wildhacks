@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { getPetDisplayData } from '@/app/actions/pet';
-import { PetMood } from '@/models/pet.model';
+import { getPetGifByHealth } from '@/models/pet.model';
 
 // Health bar colors based on health level
 const getHealthBarColor = (health: number) => {
@@ -12,14 +12,20 @@ const getHealthBarColor = (health: number) => {
   return 'bg-red-500';
 };
 
-// Mood descriptions
-const MOOD_DESCRIPTIONS: Record<PetMood, string> = {
-  'happy': 'Your pet is happy and thriving!',
-  'excited': 'Your pet is excited and energetic!',
-  'neutral': 'Your pet is feeling okay.',
-  'sleepy': 'Your pet is feeling a bit tired.',
-  'angry': 'Your pet is upset with the lack of focus.',
-  'sad': 'Your pet is sad and needs more attention.'
+// Health state descriptions
+const HEALTH_DESCRIPTIONS: Record<string, string> = {
+  'high': 'Your duck is happy and thriving!',
+  'medium': 'Your duck is doing okay.',
+  'low': 'Your duck is feeling tired.',
+  'critical': 'Your duck needs more attention!'
+};
+
+// Get health state description based on health value
+const getHealthDescription = (health: number): string => {
+  if (health > 80) return HEALTH_DESCRIPTIONS.high;
+  if (health > 50) return HEALTH_DESCRIPTIONS.medium;
+  if (health > 30) return HEALTH_DESCRIPTIONS.low;
+  return HEALTH_DESCRIPTIONS.critical;
 };
 
 interface PetWidgetProps {
@@ -30,7 +36,6 @@ export default function PetWidget({ groupId }: PetWidgetProps) {
   const [petData, setPetData] = useState<{
     petId: string;
     health: number;
-    mood: PetMood;
     imageUrl: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,21 +86,18 @@ export default function PetWidget({ groupId }: PetWidgetProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 w-full max-w-xs">
-      <div className="text-center mb-2">
-        <h3 className="text-lg font-semibold">Team Pet</h3>
-      </div>
+    <div className="rounded-lg shadow-md p-4 w-full max-w-xs">
       
       <div className="relative h-40 w-full mb-4">
         <Image
           src={petData.imageUrl}
-          alt={`Pet in ${petData.mood} mood`}
+          alt="Team duck"
           fill
           className="object-contain"
           onError={(e) => {
             // Fallback if image fails to load
             const target = e.target as HTMLImageElement;
-            target.src = '/gemini.png';
+            target.src = '/pet/duck_idle.gif';
           }}
         />
       </div>
@@ -114,8 +116,8 @@ export default function PetWidget({ groupId }: PetWidgetProps) {
       </div>
       
       <div className="text-center">
-        <p className="text-sm font-medium">Current Mood: <span className="font-bold capitalize">{petData.mood}</span></p>
-        <p className="text-xs text-gray-600">{MOOD_DESCRIPTIONS[petData.mood]}</p>
+        <p className="text-sm font-medium">Duck Status</p>
+        <p className="text-xs text-gray-600">{getHealthDescription(petData.health)}</p>
       </div>
     </div>
   );

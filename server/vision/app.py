@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 # Configuration
 DATA_SEND_INTERVAL = 1  # Seconds between data sends
-REMOTE_SERVER_URL = "http://localhost:3000/api/events"  # Your remote endpoint
+REMOTE_SERVER_URL = "http://localhost:3000/api/cv-event"  # Your remote endpoint
 
 # Store the latest detection results
 latest_data = {
@@ -25,7 +25,9 @@ latest_data = {
     "focus": "focused",
     "thumbs_up": "not_detected",
     "wave": "not_detected",
-    "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+    "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+    "user_email": "arslankamcybekov7@gmail.com",
+    "current_tab_url": ""
 }
 
 # Detection thread function
@@ -80,7 +82,9 @@ def run_detectors():
                 "focus": "focused" if last_focus["is_focused"] else "distracted",
                 "thumbs_up": "detected" if last_gesture["gesture"] == "Thumbs Up" else "not_detected",
                 "wave": "detected" if last_gesture["gesture"] == "Wave" else "not_detected",
-                "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+                "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+                "user_email": "arslankamcybekov7@gmail.com",
+                "current_tab_url": ""
             }
             
             # Optional: Display debug window
@@ -153,5 +157,5 @@ if __name__ == "__main__":
     sender_thread.start()
     
     # Start Flask server
-    print("🚀 Starting Vision Server on http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    print("🚀 Starting Vision Server on http://localhost:8000")
+    app.run(host='0.0.0.0', port=8000, debug=False)

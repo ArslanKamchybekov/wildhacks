@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { updateUser } from "@/app/actions/user"
+import { DashboardHeader } from "@/components/dashboard-header"
 
 export default function SettingsPage() {
   const { dbUser, auth0User, isLoading } = useCurrentUser()
@@ -79,12 +80,10 @@ export default function SettingsPage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-medium">Profile Settings</h3>
-          <p className="text-sm text-muted-foreground">
-            Update your account settings and profile information.
-          </p>
-        </div>
+        <DashboardHeader 
+          heading="Profile Settings" 
+          text="Update your account settings and profile information"
+        />
         
         <form onSubmit={handleSubmit}>
           <Card>
@@ -135,20 +134,6 @@ export default function SettingsPage() {
               Information about your account.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Account Created</p>
-              <p className="text-sm text-muted-foreground">
-                {dbUser.createdAt ? new Date(dbUser.createdAt).toLocaleDateString() : "N/A"}
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Last Updated</p>
-              <p className="text-sm text-muted-foreground">
-                {dbUser.updatedAt ? new Date(dbUser.updatedAt).toLocaleDateString() : "N/A"}
-              </p>
-            </div>
-          </CardContent>
         </Card>
       </div>
     </DashboardShell>

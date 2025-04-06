@@ -1,72 +1,18 @@
 import { connectToDatabase } from '@/lib/db';
-import CVEvent, { VALID_EVENT_TYPES, VALID_EVENT_VALUES } from '@/models/cv-event.model';
-import GeminiRoast from '@/models/gemini-roast.model';
 import User from '@/models/user.model';
 import Group from '@/models/group.model';
 import { generateRoastForUser } from '@/lib/gemini-roast';
-import { createSystemMessage } from '@/app/actions/message';
+import GeminiRoast from '@/models/gemini-roast.model';
+import { getCurrentActiveSession } from '@/app/actions/session';
 
 /**
- * Validate a CV event
- */
-export function validateCVEvent(
-  event_type: string, 
-  event_value: string
-): { isValid: boolean; errorMessage?: string } {
-  // Validate event type
-  if (!VALID_EVENT_TYPES.includes(event_type)) {
-    return {
-      isValid: false,
-      errorMessage: `Invalid event_type. Must be one of: ${VALID_EVENT_TYPES.join(', ')}`
-    };
-  }
-  
-  // Validate event value
-  if (VALID_EVENT_VALUES[event_type as keyof typeof VALID_EVENT_VALUES] && 
-      !VALID_EVENT_VALUES[event_type as keyof typeof VALID_EVENT_VALUES].includes(event_value)) {
-    return {
-      isValid: false,
-      errorMessage: `Invalid event_value for ${event_type}. Must be one of: ${VALID_EVENT_VALUES[event_type as keyof typeof VALID_EVENT_VALUES].join(', ')}`
-    };
-  }
-  
-  return { isValid: true };
-}
-
-/**
- * Create a new CV event
- */
-export async function createCVEvent(
-  session_id: string,
-  user_id: string,
-  event_type: string,
-  event_value: string,
-  timestamp?: string
-): Promise<any> {
-  await connectToDatabase();
-  
-  // Create a new CV event
-  const newEvent = new CVEvent({
-    session_id,
-    user_id,
-    event_type,
-    event_value,
-    event_timestamp: timestamp ? new Date(timestamp) : new Date()
-  });
-  
-  // Save the event
-  await newEvent.save();
-  
-  return newEvent;
-}
-
-/**
- * Generate a roast based on the CV event
+ * Generate a roast based on the CV event data
  */
 export async function generateRoast(
   userId: string, 
-  eventType: string, 
-  eventValue: string
+  emotion: string,
+  focus: string,
+  current_tab_url?: string
 ): Promise<string> {
   try {
     await connectToDatabase();
@@ -77,42 +23,38 @@ export async function generateRoast(
       throw new Error('User not found');
     }
 
-    console.log(user);
+    // Get the active session for this user
+    const activeSession = await getCurrentActiveSession(userId);
+    console.log('Active session:', activeSession);
     
-    // Find the user's group by checking all groups
+    // Find a group where the user is a member
+    // Since members is stored as a JSON string, we need to query all groups
+    // and check if the user's email is in the parsed members array
     const allGroups = await Group.find({});
-    let groupData = null;
+    let group = null;
+    let groupContext = ``;
     
-    // Loop through all groups and check if the user's email is in the members array
-    for (const group of allGroups) {
+    for (const g of allGroups) {
       try {
-        const membersArray = JSON.parse(group.members);
+        const membersArray = JSON.parse(g.members);
         if (membersArray.includes(user.email)) {
-          groupData = group;
+          group = g;
+          groupContext = `
+            Group Name: ${g.name}
+            Group Members: ${membersArray.join(', ')}
+          `;
           break;
         }
-      } catch (e) {
-        console.error('Error parsing group members:', e);
+      } catch (error) {
+        console.error('Error parsing group members:', error);
       }
     }
     
-    if (!groupData) {
-      throw new Error('Group not found for user: ' + user.email);
+    if (!group) {
+      console.log('No group found for user:', user.email);
+      // Instead of throwing an error, create a personal roast without group context
+      console.log('Using personal roast without group context');
     }
-
-    console.log(groupData);
-    
-    // Parse the members JSON string to get an array
-    const members = JSON.parse(groupData.members);
-    
-    // Create group context for Gemini
-    const group = {
-      id: groupData._id.toString(),
-      name: groupData.name,
-      members: members
-    };
-
-    console.log(group);
     
     // Only use the current user's tick data
     let ticks: any[] = [];
@@ -134,16 +76,96 @@ export async function generateRoast(
 
     console.log(usersWithTicks);
     
-    // Generate the roast using the specialized roast function
-    const roastContent = await generateRoastForUser(
-      user.name || user.email.split('@')[0], // Use name or first part of email
-      eventType,
-      eventValue,
-      ticks
-    );
-
-    console.log(roastContent);
+    // Check if the current URL aligns with the session goal
+    let shouldRoast = true;
+    let alignmentReason = '';
+    let isEmptyUrl = !current_tab_url || current_tab_url === '' || current_tab_url === 'null';
     
+    // Skip URL alignment check if URL is empty or null (CV-only data)
+    if (!isEmptyUrl && activeSession && activeSession.goal) {
+      console.log('Checking URL alignment with session goal...');
+      console.log('Current URL:', current_tab_url);
+      console.log('Session goal:', activeSession.goal);
+      
+      // Use Gemini to determine if the URL aligns with the session goal
+      try {
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        
+        const prompt = `
+          I'm currently studying with the goal: "${activeSession.goal}"
+          I'm browsing this website: "${current_tab_url}"
+          
+          Analyze if this website is aligned with my study goal. 
+          Respond with ONLY "yes" or "no" followed by a very brief reason in parentheses.
+          Example: "yes (educational content about the topic)" or "no (social media distraction)"
+        `;
+        
+        const result = await model.generateContent(prompt);
+        const response = result.response.text().trim().toLowerCase();
+        console.log('Alignment check result:', response);
+        
+        // Parse the response
+        if (response.startsWith('yes')) {
+          shouldRoast = false; // URL aligns with goal, don't roast
+          alignmentReason = response.includes('(') ? response.substring(response.indexOf('(')) : '';
+        } else {
+          // Extract the reason if available
+          alignmentReason = response.includes('(') ? response.substring(response.indexOf('(')) : '';
+        }
+      } catch (error) {
+        console.error('Error checking URL alignment:', error);
+        // If there's an error, default to creating a roast
+        shouldRoast = true;
+      }
+    }
+    
+    // Generate a roast based on conditions
+    let roastContent = null;
+    
+    // Always generate a roast for CV data (empty URL) or if URL doesn't align with goals
+    if (shouldRoast || isEmptyUrl) {
+      // Log appropriate message based on source
+      if (isEmptyUrl) {
+        console.log('Generating roast based on computer vision data (no URL)...');
+      } else {
+        console.log('URL does not align with session goal. Generating roast...');
+      }
+      
+      // Generate roast with appropriate context
+      roastContent = await generateRoastForUser(
+        user.name || user.email.split('@')[0], // Use name or first part of email
+        focus, // Pass focus directly
+        emotion, // Pass emotion directly
+        ticks,
+        isEmptyUrl ? undefined : current_tab_url, // Only pass URL if it's valid
+        isEmptyUrl ? undefined : alignmentReason, // Only pass alignment reason if URL is valid
+        activeSession?.goal // Pass the active session goal if available
+      );
+    } else {
+      console.log('URL aligns with session goal. No roast needed.');
+      return ''; // Return empty string to indicate no roast needed
+    }
+
+    // Save the roast if we have a group
+    if (group) {
+      await saveRoast(
+        group._id.toString(),
+        user._id,
+        roastContent,
+        group.geminiRoastLevel // Use geminiRoastLevel from the group model
+      );
+    } else {
+      // Save roast without group context
+      await saveRoast(
+        'personal', // Use 'personal' as groupId for personal roasts
+        user._id,
+        roastContent,
+        5 // Default roast level
+      );
+    }
+      
     return roastContent;
   } catch (error) {
     console.error('Error generating roast:', error);
@@ -158,7 +180,7 @@ export async function saveRoast(
   group_id: string,
   target_user_id: string,
   roast_content: string,
-  roast_level: number = 5
+  roast_level: number
 ): Promise<any> {
   await connectToDatabase();
   
@@ -174,81 +196,4 @@ export async function saveRoast(
   await newRoast.save();
   
   return newRoast;
-}
-
-/**
- * Process a CV event and generate a roast if needed
- */
-export async function processCVEvent(
-  session_id: string,
-  user_id: string,
-  event_type: string,
-  event_value: string,
-  timestamp?: string
-): Promise<{ event: any; roast: string | null }> {
-  // Create the CV event
-  const newEvent = await createCVEvent(
-    session_id,
-    user_id,
-    event_type,
-    event_value,
-    timestamp
-  );
-  
-  // Generate a roast if the event indicates distraction
-  let roastContent = null;
-  if (
-    (event_type === 'eye_movement' && event_value === 'looking_away') ||
-    (event_type === 'emotion' && ['frustrated', 'angry'].includes(event_value)) ||
-    (event_type === 'face_movement' && event_value === 'nodding')
-  ) {
-    // Generate a roast
-    roastContent = await generateRoast(user_id, event_type, event_value);
-    
-    // Find the user
-    const user = await User.findOne({ _id: user_id });
-    if (!user) {
-      console.error('User not found for roast saving');
-      return { event: newEvent, roast: roastContent };
-    }
-    
-    // Find the user's group by checking all groups
-    const allGroups = await Group.find({});
-    let groupData = null;
-    
-    // Loop through all groups and check if the user's email is in the members array
-    for (const group of allGroups) {
-      try {
-        const membersArray = JSON.parse(group.members);
-        if (membersArray.includes(user.email)) {
-          groupData = group;
-          break;
-        }
-      } catch (e) {
-        console.error('Error parsing group members:', e);
-      }
-    }
-    
-    if (groupData) {
-      // Save the roast
-      await saveRoast(
-        groupData._id,
-        user_id,
-        roastContent
-      );
-      
-      // Send the roast to the chat as a system message
-      try {
-        await createSystemMessage(groupData._id.toString(), roastContent);
-        console.log('Roast sent to chat:', roastContent);
-      } catch (error) {
-        console.error('Error sending roast to chat:', error);
-      }
-    }
-  }
-  
-  return {
-    event: newEvent,
-    roast: roastContent
-  };
 }

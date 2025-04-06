@@ -1,168 +1,270 @@
-// Background script for the GoalKeeper Pet extension
-// This script runs in the background and tracks tab changes
+// background.js - Handles logic for personal pet CV interaction
 
-// API endpoint for checking URL productivity
-const API_ENDPOINT = 'https://wildhacks-api.vercel.app/api/check-url';
-// Default pet health
-const MAX_HEALTH = 100;
-// Health decrease amount for unproductive sites
-const HEALTH_DECREASE = 5;
-// Cooldown period in milliseconds to avoid too frequent checks
-const CHECK_COOLDOWN = 10000; // 10 seconds
+const LOCAL_CV_SERVER = 'http://localhost:8000/api/state';
+const DUCK_GIFS = {
+  IDLE: 'duckidle.gif',
+  HAPPY: 'duckhappy.gif',
+  DAMAGE: 'duckdamage.gif',
+  CRITICAL: 'duckcritical.gif',
+  DEATH: 'duckdeath.gif',
+  THUMB: 'duckthumb.gif',
+  WAVE: 'duckwave.gif'
+};
 
-// Store the last check time to implement cooldown
-let lastCheckTime = 0;
+// Keep track of pet state
+let currentDuckGif = DUCK_GIFS.IDLE;
+let isDuckDead = false;
+let personalPetHealth = 100;
+let isDamageAnimationActive = false;
+let lastHealthUpdate = 0;
+const HEALTH_UPDATE_INTERVAL = 3000;
 
-// Initialize pet data in storage if it doesn't exist
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.get(['petHealth', 'petType', 'goals', 'userId'], (result) => {
-    if (result.petHealth === undefined) {
-      chrome.storage.local.set({ petHealth: MAX_HEALTH });
-    }
-    if (result.petType === undefined) {
-      chrome.storage.local.set({ petType: 'dragon' }); // Default pet type
-    }
-    if (result.goals === undefined) {
-      chrome.storage.local.set({ goals: [] }); // Empty goals array
-    }
-    if (result.userId === undefined) {
-      chrome.storage.local.set({ userId: null }); // No user ID initially
-    }
-  });
-});
+// WAVE DETECTION IMPROVEMENT
+const WAVE_MEMORY_DURATION = 3000; // Remember waves for 3 seconds
+let lastWaveDetectedTime = 0;
 
-// Listen for tab updates (when user navigates to a new page)
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  // Only check when the page has finished loading and has a URL
-  if (changeInfo.status === 'complete' && tab.url) {
-    checkURL(tab.url, tabId);
-  }
-});
+// Add this near the top with your other state variables
+let isDeathAnimationPlaying = false;
 
-// Listen for tab activation (when user switches tabs)
-chrome.tabs.onActivated.addListener((activeInfo) => {
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
-    if (tab.url) {
-      checkURL(tab.url, tab.id);
-    }
-  });
-});
-
-// Function to check if a URL is productive based on user goals
-async function checkURL(url, tabId) {
-  // Implement cooldown to avoid too frequent checks
-  const now = Date.now();
-  if (now - lastCheckTime < CHECK_COOLDOWN) {
-    return;
-  }
-  lastCheckTime = now;
-
-  // Skip checking for browser internal pages, extension pages, etc.
-  if (url.startsWith('chrome://') || 
-      url.startsWith('chrome-extension://') || 
-      url.startsWith('about:') ||
-      url.startsWith('file://')) {
-    return;
-  }
-
-  try {
-    // Get user ID and goals from storage
-    const { userId, goals, petHealth } = await chrome.storage.local.get(['userId', 'goals', 'petHealth']);
-    
-    // If no user ID or goals, don't perform check
-    if (!userId || !goals || goals.length === 0) {
-      return;
-    }
-
-    // Prepare data for API request
-    const data = {
-      url: url,
-      userId: userId,
-      goals: goals
-    };
-
-    // Call the API to check if the URL is productive
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data)
-    });
-
-    const result = await response.json();
-
-    // Update pet health based on productivity check
-    if (!result.isProductive) {
-      // Calculate new health
-      const newHealth = Math.max(0, petHealth - HEALTH_DECREASE);
-      
-      // Update health in storage
-      chrome.storage.local.set({ petHealth: newHealth });
-      
-      // Send message to content script to update pet display
-      chrome.tabs.sendMessage(tabId, { 
-        action: 'updatePet', 
-        health: newHealth,
-        isProductive: false,
-        message: result.message || 'This site is not helping you reach your goals!'
-      });
-      
-      // If health reaches 0, notify user
-      if (newHealth === 0) {
-        chrome.tabs.sendMessage(tabId, { 
-          action: 'petDied',
-          message: 'Your pet has run out of health! Focus on your goals to revive it.'
-        });
-      }
-    } else {
-      // Send message that site is productive
-      chrome.tabs.sendMessage(tabId, { 
-        action: 'updatePet', 
-        health: petHealth,
-        isProductive: true,
-        message: result.message || 'This site is helping you reach your goals!'
-      });
-    }
-  } catch (error) {
-    console.error('Error checking URL productivity:', error);
-  }
+// Debug mode to see detailed logs
+const DEBUG = true;
+function log(...args) {
+  if (DEBUG) console.log(...args);
 }
 
-// Listen for messages from popup or content script
+function pollCvData() {
+  fetch(LOCAL_CV_SERVER)
+    .then(res => res.json())
+    .then(data => {
+      // WAVE DETECTION IMPROVEMENT - Remember when we see a wave
+      if (data.wave === 'detected') {
+        lastWaveDetectedTime = Date.now();
+        log("Wave detected! Will remember for 3 seconds");
+      }
+      
+      // Create enhanced data with better wave detection
+      const enhancedData = {
+        ...data,
+        // Override wave detection if we've seen a wave in the last 3 seconds
+        wave: (Date.now() - lastWaveDetectedTime < WAVE_MEMORY_DURATION) 
+              ? 'detected' : data.wave
+      };
+      
+      processCvState(enhancedData);
+    })
+    .catch(() => {
+      log("Error connecting to CV server");
+    });
+}
+
+// 2. Update the processCvState function to completely stop processing when dead
+function processCvState(data) {
+  // Completely block all updates if the duck is dead
+  if (isDuckDead) {
+    // Only log if still in animation
+    if (isDeathAnimationPlaying) {
+      log("Death animation in progress. Blocking all updates.");
+    }
+    
+    // Force death GIF to stay as current GIF
+    currentDuckGif = DUCK_GIFS.DEATH;
+    
+    // Skip all other processing
+    return;
+  }
+
+  const now = Date.now();
+  const isFocused = data.focus === 'focused';
+  const isHappy = data.emotion === 'happy';
+  const wave = data.wave === 'detected';
+  const thumbsUp = data.thumbs_up === 'detected';
+
+  log("Processing CV data:", { 
+    focus: data.focus, 
+    emotion: data.emotion,
+    wave: data.wave,
+    thumbsUp: data.thumbs_up
+  });
+
+  let healthChange = 0;
+  let newGif = DUCK_GIFS.IDLE;
+
+  // Handle death state but don't return early if animation is playing
+  if (isDuckDead) {
+    newGif = DUCK_GIFS.DEATH;
+  } 
+  // Calculate health changes if not dead
+  else {
+    // Simply calculate health changes
+    if (!isFocused) {
+      healthChange = -10;
+      newGif = DUCK_GIFS.DAMAGE;
+    } else if (isFocused && isHappy) {
+      healthChange = 3;
+      newGif = DUCK_GIFS.HAPPY;
+    } else if (isFocused) {
+      healthChange = 1;
+      newGif = DUCK_GIFS.IDLE;
+    }
+
+    // Critical health overrides regular states
+    if (personalPetHealth < 50 && healthChange >= 0) {
+      newGif = DUCK_GIFS.CRITICAL;
+    }
+
+    // FIXED: Wave always takes priority over thumbs up
+    if (wave) {
+      log("Wave detected - selecting wave animation");
+      newGif = DUCK_GIFS.WAVE;
+    } else if (thumbsUp) {
+      log("Thumbs up detected - selecting thumbs up animation");
+      newGif = DUCK_GIFS.THUMB;
+    }
+
+    // ✅ Apply health changes ONLY if interval has passed
+    if (now - lastHealthUpdate >= HEALTH_UPDATE_INTERVAL) {
+      personalPetHealth = Math.max(0, Math.min(100, personalPetHealth + healthChange));
+      lastHealthUpdate = now;
+      log("Health updated to:", personalPetHealth);
+
+      // ✅ If we just applied DAMAGE, trigger damage animation
+      if (healthChange < 0) {
+        // Always send damage notification when health decreases
+        log("Sending damage animation to all tabs");
+        
+        // Set the flag first
+        isDamageAnimationActive = true;
+        
+        // Notify all tabs
+        chrome.tabs.query({}, (tabs) => {
+          for (let tab of tabs) {
+            chrome.tabs.sendMessage(tab.id, { 
+              action: 'showDamage',
+              health: personalPetHealth // Include current health for reference
+            });
+          }
+        });
+      }
+    }
+
+    // Handle pet death - add code to make sure it stays dead
+    if (personalPetHealth <= 0 && !isDuckDead) {
+      isDuckDead = true;
+      isDeathAnimationPlaying = true;
+      currentDuckGif = DUCK_GIFS.DEATH;
+      log("Pet has died :( Showing death animation");
+
+      // Notify all tabs of death (and show death gif)
+      chrome.tabs.query({}, (tabs) => {
+        for (let tab of tabs) {
+          chrome.tabs.sendMessage(tab.id, {
+            action: 'petDied',
+            deathGifPath: chrome.runtime.getURL(`assets/${DUCK_GIFS.DEATH}`)
+          });
+        }
+      });
+
+      // Match this timeout to content-script.js exactly
+      setTimeout(() => {
+        isDeathAnimationPlaying = false;
+        log("Death animation duration complete");
+      }, 12000); // Use 12000ms to match content-script.js
+    }
+  }
+
+  // ✅ Always update the current duck GIF
+  currentDuckGif = newGif;
+  log("Selected duck GIF:", currentDuckGif);
+
+  // Notify popup
+  chrome.runtime.sendMessage({
+    action: 'updateDuckGif',
+    gifPath: chrome.runtime.getURL(`assets/${currentDuckGif}`),
+    isDead: isDuckDead
+  });
+
+  // Notify all tabs - FIXED: Always include full cvData
+  chrome.tabs.query({}, (tabs) => {
+    for (let tab of tabs) {
+      chrome.tabs.sendMessage(tab.id, {
+        action: 'updatePet',
+        health: personalPetHealth,
+        cvData: data,
+        isDead: isDuckDead
+      });
+    }
+  });
+}
+
+// 1. First, reduce the polling frequency
+function startCvPolling() {
+  log("Starting CV polling");
+  setInterval(pollCvData, 300); // Reduce from 100ms to 300ms - still responsive but less CPU usage
+  pollCvData();
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Handle login from popup
-  if (message.action === 'login') {
-    chrome.storage.local.set({ 
-      userId: message.userId,
-      goals: message.goals,
-      petType: message.petType || 'dragon',
-      petHealth: MAX_HEALTH
-    });
+  log("Background received message:", message);
+  
+  // Add a new message type for resetting
+  if (message.action === 'resetPet') {
+    isDuckDead = false;
+    isDeathAnimationPlaying = false; // Reset this flag too
+    personalPetHealth = 100;
+    currentDuckGif = DUCK_GIFS.IDLE;
+    isDamageAnimationActive = false;
+    log("Pet has been resurrected!");
     sendResponse({ success: true });
+    
+    // Notify tabs of resurrection
+    chrome.tabs.query({}, (tabs) => {
+      for (let tab of tabs) {
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'updatePet',
+          health: personalPetHealth,
+          cvData: {
+            focus: 'focused',
+            emotion: 'neutral',
+            wave: 'not_detected',
+            thumbs_up: 'not_detected'
+          },
+          isDead: false
+        });
+      }
+    });
+    
+    return true;
   }
   
-  // Handle logout from popup
-  else if (message.action === 'logout') {
-    chrome.storage.local.set({ 
-      userId: null,
-      goals: [],
-      petHealth: MAX_HEALTH
-    });
+  if (message.action === 'damageAnimationComplete') {
+    isDamageAnimationActive = false;
     sendResponse({ success: true });
-  }
-  
-  // Handle request for pet data
-  else if (message.action === 'getPetData') {
-    chrome.storage.local.get(['petHealth', 'petType', 'userId', 'goals'], (result) => {
-      sendResponse(result);
+  } else if (message.action === 'getPetData') {
+    // FIXED: Include latest CV data
+    sendResponse({
+      petHealth: personalPetHealth,
+      cvData: {
+        focus: 'focused',
+        emotion: 'neutral',
+        wave: (Date.now() - lastWaveDetectedTime < WAVE_MEMORY_DURATION) ? 'detected' : 'not_detected',
+        thumbs_up: 'not_detected'
+      },
+      isDead: isDuckDead
     });
-    return true; // Required for async sendResponse
+  } else if (message.action === 'getDuckGif') {
+    sendResponse({
+      success: true,
+      gifPath: chrome.runtime.getURL(`assets/${currentDuckGif}`),
+      isDead: isDuckDead
+    });
   }
-  
-  // Handle manual health update (for testing)
-  else if (message.action === 'updateHealth') {
-    chrome.storage.local.set({ petHealth: message.health });
-    sendResponse({ success: true });
-  }
+  return true;
 });
+
+// TEST USER (reinserted)
+chrome.storage.local.set({
+  userEmail: 'arslankamcybekov7@gmail.com',
+  isLoggedIn: true
+});
+
+startCvPolling();

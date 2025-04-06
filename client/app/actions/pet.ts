@@ -1,7 +1,7 @@
 'use server';
 
 import { connectToDatabase } from '@/lib/db';
-import Pet, { IPet, PetMood } from '@/models/pet.model';
+import Pet, { IPet, getPetGifByHealth } from '@/models/pet.model';
 
 /**
  * Get a pet by ID
@@ -39,21 +39,9 @@ export async function updatePetHealth(petId: string, health: number): Promise<IP
     // Ensure health is within valid range (0-100)
     const validHealth = Math.max(0, Math.min(100, health));
     
-    // Determine mood based on health
-    let mood: PetMood = 'neutral';
-    if (validHealth > 80) {
-      mood = 'happy';
-    } else if (validHealth > 60) {
-      mood = 'excited';
-    } else if (validHealth < 20) {
-      mood = 'sad';
-    } else if (validHealth < 50) {
-      mood = 'angry';
-    }
-    
     return await Pet.findByIdAndUpdate(
       petId,
-      { health: validHealth, mood },
+      { health: validHealth },
       { new: true }
     );
   } catch (error) {
@@ -75,19 +63,9 @@ export async function decreasePetHealth(petId: string, amount: number): Promise<
     // Calculate new health and ensure it doesn't go below 0
     const newHealth = Math.max(0, pet.health - amount);
     
-    // Determine mood based on health
-    let mood: PetMood = 'neutral';
-    if (newHealth < 20) {
-      mood = 'sad';
-    } else if (newHealth < 50) {
-      mood = 'angry';
-    } else if (newHealth < 80) {
-      mood = 'sleepy';
-    }
-    
     return await Pet.findByIdAndUpdate(
       petId,
-      { health: newHealth, mood },
+      { health: newHealth },
       { new: true }
     );
   } catch (error) {
@@ -109,17 +87,9 @@ export async function increasePetHealth(petId: string, amount: number): Promise<
     // Calculate new health and ensure it doesn't go above 100
     const newHealth = Math.min(100, pet.health + amount);
     
-    // Determine mood based on health
-    let mood: PetMood = 'neutral';
-    if (newHealth > 80) {
-      mood = 'happy';
-    } else if (newHealth > 60) {
-      mood = 'excited';
-    }
-    
     return await Pet.findByIdAndUpdate(
       petId,
-      { health: newHealth, mood },
+      { health: newHealth },
       { new: true }
     );
   } catch (error) {
@@ -128,23 +98,7 @@ export async function increasePetHealth(petId: string, amount: number): Promise<
   }
 }
 
-/**
- * Update pet mood directly
- */
-export async function updatePetMood(petId: string, mood: PetMood): Promise<IPet | null> {
-  try {
-    await connectToDatabase();
-    
-    return await Pet.findByIdAndUpdate(
-      petId,
-      { mood },
-      { new: true }
-    );
-  } catch (error) {
-    console.error('Error updating pet mood:', error);
-    throw error;
-  }
-}
+// Removed updatePetMood function as we no longer use mood
 
 /**
  * Get pet data for display (including image URL)
@@ -152,7 +106,6 @@ export async function updatePetMood(petId: string, mood: PetMood): Promise<IPet 
 export async function getPetDisplayData(groupId: string): Promise<{
   petId: string;
   health: number;
-  mood: PetMood;
   imageUrl: string;
 } | null> {
   try {
@@ -161,17 +114,13 @@ export async function getPetDisplayData(groupId: string): Promise<{
     const pet = await Pet.findOne({ groupId });
     if (!pet) return null;
     
-    // Import the mood images mapping
-    const { PET_MOOD_IMAGES } = await import('@/models/pet.model');
-    
-    // Ensure pet.mood is a valid key for PET_MOOD_IMAGES
-    const mood = pet.mood as PetMood;
+    // Get the appropriate GIF based on health
+    const imageUrl = getPetGifByHealth(pet.health);
     
     return {
       petId: pet._id.toString(),
       health: pet.health,
-      mood: mood,
-      imageUrl: PET_MOOD_IMAGES[mood]
+      imageUrl: imageUrl
     };
   } catch (error) {
     console.error('Error getting pet display data:', error);

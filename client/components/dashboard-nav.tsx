@@ -22,13 +22,8 @@ const navItems: NavItem[] = [
   },
   {
     title: "Goals",
-    href: "/goals",
+    href: "/goals/session",
     icon: Target,
-  },
-  {
-    title: "Pet",
-    href: "/pet",
-    icon: Egg,
   },
   {
     title: "Team",
@@ -47,8 +42,8 @@ export function DashboardNav() {
 
   return (
     <ScrollArea className="h-full py-6">
-      <div className="flex flex-col gap-4 px-2">
-        <nav className="grid gap-1 px-2">
+      <div className="flex flex-col gap-4">
+        <nav className="grid gap-1">
           {navItems.map((item, index) => (
             <Link
               key={index}

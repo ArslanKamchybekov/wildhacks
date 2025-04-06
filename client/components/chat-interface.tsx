@@ -9,9 +9,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getRecentMessagesByGroupId, createMessage, createSystemMessage } from "@/app/actions/message"
 import { getGroupById } from "@/app/actions/group"
-import { getUserByEmail } from "@/app/actions/user"
-import { getGroupTicks, getUserTicksInGroup } from "@/app/actions/tick"
-import { generateResponseWithContext, generateResponseWithTextContext } from "@/lib/gemini"
+import { getUserByEmail, getUserById } from "@/app/actions/user"
+import { getGroupTicks } from "@/app/actions/tick"
+import { generateResponseWithTextContext } from "@/lib/gemini"
 import { AddTickDialog } from "@/components/add-tick-dialog"
 import { Send, Bot, Info } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
@@ -49,6 +49,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
   const [newMessage, setNewMessage] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
+  const [isGeminiLoading, setIsGeminiLoading] = useState(false)
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
   const [groupTicks, setGroupTicks] = useState<{[userEmail: string]: Tick[]}>({})
   const [groupName, setGroupName] = useState("")
@@ -89,22 +90,27 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
         // Fetch messages
         const fetchedMessages = await getRecentMessagesByGroupId(groupId)
         
-        // Transform messages for display
-        const formattedMessages = fetchedMessages.map(msg => ({
-          id: msg._id,
-          content: msg.content,
-          userId: msg.userId,
-          createdAt: new Date(msg.createdAt),
-          userName: msg.userId ? 
-            groupMembers.find(m => m.email === msg.userId)?.name || "User" : 
-            "Gemini Assistant"
+        // Transform messages for display with proper user names
+        const formattedMessages = await Promise.all(fetchedMessages.map(async msg => {
+          let userName = "Gemini Assistant"
+          if (msg.userId) {
+            const userObj = await getUserById(msg.userId)
+            userName = userObj?.name || msg.userId
+          }
+          
+          return {
+            id: msg._id,
+            content: msg.content,
+            userId: msg.userId,
+            createdAt: new Date(msg.createdAt),
+            userName
+          }
         }))
         
         setMessages(formattedMessages)
         
         // Fetch group ticks
-        const ticks = await fetchGroupTicks()
-        console.log(ticks)
+        await fetchGroupTicks()
         
         // If no messages, send a welcome message from Gemini
         if (formattedMessages.length === 0) {
@@ -140,6 +146,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
     scrollToBottom()
   }, [messages])
   
+
   const fetchNewMessages = async () => {
     if (!groupId) return
     
@@ -148,12 +155,22 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
       
       // Only update if there are new messages
       if (fetchedMessages.length > messages.length) {
-        const formattedMessages = fetchedMessages.map(msg => ({
-          id: msg._id,
-          content: msg.content,
-          userId: msg.userId,
-          createdAt: new Date(msg.createdAt),
-          userName: msg.userId ? "User" : "Gemini Assistant"
+        // Create formatted messages with proper user names
+        const formattedMessages = await Promise.all(fetchedMessages.map(async msg => {
+          let userName = "Gemini Assistant"
+          
+          if (msg.userId) {
+            const userObj = await getUserById(msg.userId)
+            userName = userObj?.name || msg.userId
+          }
+          
+          return {
+            id: msg._id,
+            content: msg.content,
+            userId: msg.userId,
+            createdAt: new Date(msg.createdAt),
+            userName
+          }
         }))
         
         setMessages(formattedMessages)
@@ -164,7 +181,10 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
   }
   
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // Scroll only within the chat component
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
   }
   
   const sendMessage = async () => {
@@ -232,7 +252,6 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
   async function fetchGroupTicks() {
     try {
       const allGroupTicks = await getGroupTicks(groupId)
-      console.log(allGroupTicks)
       
       // Organize ticks by user
       const ticksByUser: {[userEmail: string]: Tick[]} = {}
@@ -256,6 +275,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
   }
 
   async function sendGeminiResponse(userMessage: string) {
+    setIsGeminiLoading(true)
     try {
       // Get the current group to check roast level
       const group = await getGroupById(groupId);
@@ -310,6 +330,8 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
       // Send a fallback message if there's an error
       await createSystemMessage(groupId, "I'm sorry, I encountered an error while processing your request. Please try again later.")
       await fetchNewMessages()
+    } finally {
+      setIsGeminiLoading(false)
     }
   }
   
@@ -319,23 +341,15 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
       sendMessage()
     }
   }
-  
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2)
-  }
+
   
   return (
-    <div className="flex flex-col h-[600px] border rounded-lg overflow-hidden">
+    <div className="flex flex-col h-[500px] border rounded-lg">
       <div className="p-4 border-b bg-muted/30">
         <h2 className="font-semibold">{groupName || "Chat"}</h2>
       </div>
       
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4" style={{ height: '420px', overflow: 'auto' }}>
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -365,7 +379,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
                       <AvatarImage src="/gemini.png" alt="Gemini" />
                     )}
                     <AvatarFallback>
-                      {message.userId ? getInitials(message.userName || "User") : <Bot className="h-5 w-5" />}
+                      {message.userId ? (message.userName || "User") : <Bot className="h-5 w-5" />}
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -399,11 +413,33 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
                 {message.userId === userId && (
                   <Avatar>
                     <AvatarImage src={user?.picture || ""} alt="You" />
-                    <AvatarFallback>{getInitials(user?.name || "You")}</AvatarFallback>
+                    <AvatarFallback>{(user?.name || "You")}</AvatarFallback>
                   </Avatar>
                 )}
               </div>
             ))}
+            {/* Gemini loading indicator */}
+            {isGeminiLoading && (
+              <div className="flex items-start gap-3 animate-pulse">
+                <Avatar>
+                  <AvatarImage src="/gemini.png" alt="Gemini" />
+                  <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Gemini Assistant</span>
+                    <span className="text-xs text-muted-foreground">typing...</span>
+                  </div>
+                  <div className="mt-1 rounded-lg p-3 bg-accent text-accent-foreground">
+                    <div className="flex space-x-2 items-center">
+                      <div className="h-2 w-2 rounded-full bg-current animate-bounce"></div>
+                      <div className="h-2 w-2 rounded-full bg-current animate-bounce delay-75"></div>
+                      <div className="h-2 w-2 rounded-full bg-current animate-bounce delay-150"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         )}

@@ -16,7 +16,8 @@ class GestureDetector:
             min_tracking_confidence=0.7
         )
         
-        self.previous_x = deque(maxlen=12)
+        # Changed from 12 to 6 for faster reaction
+        self.previous_x = deque(maxlen=6) 
         self.direction_changes = 0
         self.last_direction = None
         self.wave_threshold = 0.05
@@ -82,26 +83,19 @@ class GestureDetector:
         
         fingers_extended = self._count_extended_fingers(landmarks)
         
+        # --- New simple wave detection ---
+        if len(self.previous_x) == self.previous_x.maxlen:
+            movement = self.previous_x[-1] - self.previous_x[0]
+            if abs(movement) > 0.04 and fingers_extended >= 4:
+                return {"gesture": "Wave", "confidence": 1.0}
+        # -------------------------------
+
         if fingers_extended == 1 and thumb_tip.y < wrist.y:
             return {"gesture": "Thumbs Up", "confidence": 0.9}
         
         if fingers_extended == 2 and index_tip.y < wrist.y and middle_tip.y < wrist.y:
             if abs(index_tip.x - middle_tip.x) > 0.03:
                 return {"gesture": "Peace", "confidence": 0.9}
-        
-        if len(self.previous_x) == self.previous_x.maxlen and fingers_extended >= 4:
-            for i in range(1, len(self.previous_x)):
-                current_direction = 1 if self.previous_x[i] > self.previous_x[i-1] else -1
-                if self.last_direction is not None and current_direction != self.last_direction:
-                    self.direction_changes += 1
-                self.last_direction = current_direction
-            
-            total_movement = max(self.previous_x) - min(self.previous_x)
-            
-            if total_movement > self.wave_threshold and self.direction_changes >= self.direction_threshold:
-                confidence = min(1.0, (total_movement / self.wave_threshold) * 0.5 + (self.direction_changes / self.direction_threshold) * 0.5)
-                self.direction_changes = 0
-                return {"gesture": "Wave", "confidence": round(confidence, 2)}
         
         return {"gesture": "Hand Detected", "confidence": 1.0}
     
