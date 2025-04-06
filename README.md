@@ -10,8 +10,8 @@ We set out to build an app that goes beyond the typical productivity reminder. D
 
 - **Real-Time Productivity**: Monitor your progress with a dynamic web app.
 - **Virtual Duck Companion**: Bond with a cute duck via your webcam (and give it a thumbs up/wave, trust us!). If you slack off and miss your goals, **the duck dies**.
-- **Shared Experience**: Raise a duck with friends and even place bets on your commitments using real money.
-- **Motivational Roasts**: Get encouraging—and sometimes brutally honest—roasts powered by Gemini AI.
+- **Shared Experience**: Raise a duck with friends and hold each other accountable.
+- **Motivational Roasts**: Get encouraging—and sometimes brutally honest—roasts powered by Gemini AI (in front of everyone).
 
 ## How We Built It
 
