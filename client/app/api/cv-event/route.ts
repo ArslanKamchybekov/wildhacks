@@ -8,11 +8,17 @@ import Group from '@/models/group.model';
 import { getPetByGroupId, decreasePetHealth, increasePetHealth } from '@/app/actions/pet';
 import UserConnection from '@/models/user-connection.model';
 
+// Email rate limiting - track last notification time per user
+const emailCooldowns = new Map<string, number>();
+const EMAIL_COOLDOWN_PERIOD = 10000; // 10 seconds in milliseconds
+
 export async function POST(req: NextRequest) {
   try {
     // Parse the request body
     const body = await req.json();
     const { emotion, focus, thumbs_up, wave, timestamp, user_email, current_tab_url } = body;
+
+    console.log('CV event received:', { emotion, focus, thumbs_up, wave, timestamp, user_email, current_tab_url });
 
     // Get the user from the database
     const dbUser = await getUserByEmail(user_email);
@@ -79,17 +85,36 @@ export async function POST(req: NextRequest) {
         }
       }
       
-      // If a group is found
-      if (groupData) {
+      // If a group is found and user is distracted
+      if (groupData && focus !== 'focused') {
         // 1. Send the message to the group chat
         if (messageToSend) {
           console.log('Sending message to group chat:', messageToSend);
           await createSystemMessage(groupData._id.toString(), messageToSend);
-          if(allConnections.length === 1) {
-            await sendEmail(messageToSend, allConnections[0].email);
+          
+          // Check if we're within the email cooldown period
+          const userId = dbUser._id.toString();
+          const now = Date.now();
+          const lastEmailTime = emailCooldowns.get(userId) || 0;
+          const timeElapsed = now - lastEmailTime;
+          
+          if (timeElapsed >= EMAIL_COOLDOWN_PERIOD) {
+            // It's been long enough since the last email, send a new one
+            console.log(`Sending email notification (last was ${timeElapsed}ms ago)`);
+            
+            if(allConnections.length === 1) {
+              await sendEmail(messageToSend, allConnections[0].email);
+            } else {
+              await batchSendEmails(messageToSend, allConnections.map(conn => conn.email));
+            }
+            
+            // Update the cooldown timestamp
+            emailCooldowns.set(userId, now);
+            console.log(`Email sent and cooldown updated for user ${userId}`);
           } else {
-            await batchSendEmails(messageToSend, allConnections.map(conn => conn.email));
+            console.log(`Skipping email - cooldown active (${timeElapsed}ms elapsed, need ${EMAIL_COOLDOWN_PERIOD}ms)`);
           }
+          
           console.log('Message sent to group chat:', messageToSend);
         }
         

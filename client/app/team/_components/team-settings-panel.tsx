@@ -45,7 +45,6 @@ export function TeamSettingsPanel({ selectedGroup, currentUserEmail, refreshGrou
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Team Members</CardTitle>
         </CardHeader>
         <CardContent>
           <MemberManagement
