@@ -4,7 +4,7 @@ Waddl is a real-time productivity computer vision web app with a twist—a virtu
 
 ## Inspiration
 
-We set out to build an app that goes beyond the typical productivity reminder. Drawing inspiration from Tamagotchis, sports betting, and our playful habit of roasting each other, Waddl is the love child of our interests—quirky, intense, and designed to push you toward success (at the cost of your wallet, honor, and an adorable pet).
+We set out to build an app that goes beyond the typical productivity reminder. Drawing inspiration from Tamagotchis, sports betting, and our playful habit of roasting each other, Waddl is the love child of our interests—quirky, intense, and designed to push you toward success (at the cost of your honor and an adorable pet).
 
 ## What It Does
 
