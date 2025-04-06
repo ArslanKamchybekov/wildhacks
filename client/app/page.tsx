@@ -8,6 +8,7 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from "three/examples/jsm/controls/DragControls.js";
+import TechStackCard from "@/components/tech-stack-card";
 
 export default function Home() {
   const { user } = useUser();
@@ -170,15 +171,6 @@ export default function Home() {
                       Get Started <ArrowRight className="h-5 w-5" />
                     </Button>
                   </Link>
-                  <Link href="/demo">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="px-8 py-6 text-lg"
-                    >
-                      Try Demo
-                    </Button>
-                  </Link>
                 </div>
               </div>
 
@@ -228,6 +220,8 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      <TechStackCard />
 
       {/* Footer */}
       <footer className="border-t bg-background/50 backdrop-blur-sm">
