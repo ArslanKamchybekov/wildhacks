@@ -4,7 +4,8 @@ import { connectToDatabase } from "@/lib/db";
 import Message, { IMessage } from "@/models/message.model";
 import twilio from "twilio";
 
-const client = twilio(process.env.TWILIO_ACCOUNTID, process.env.TWILIO_TOKEN);
+// We'll use email instead of SMS for notifications
+import { sendEmail as sendEmailLib } from '@/lib/email';
 /**
  * Get messages by group ID
  */
@@ -154,31 +155,78 @@ export async function deleteMessage(messageId: string): Promise<boolean> {
   }
 }
 
-export async function sendSms(
+/**
+ * Send an email notification
+ */
+export async function sendEmail(
   message_content: string,
-  reciever_number: string
-) {
+  receiver_email: string
+): Promise<string | null> {
   try {
-    const message = await client.messages.create({
-      body: message_content,
-      from: "+18779561287",
-      to: `+${reciever_number}`,
+    // Trim message content to avoid any extra whitespace
+    const trimmedMessage = message_content.trim();
+    
+    // Log the email attempt
+    console.log(`Attempting to send email to ${receiver_email}`);
+    
+    // Send the email using the imported library function
+    const result = await sendEmailLib({
+      to: receiver_email,
+      subject: "Duck Tracker Notification",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #4f46e5;">Duck Tracker Update</h2>
+          <p>${trimmedMessage}</p>
+          <p>- The Duck Tracker Team</p>
+        </div>
+      `
     });
-    console.log(`Message sent with SID: ${message.sid}`);
+    
+    console.log(`Email result:`, result);
+    return result.success ? 'sent' : null;
   } catch (error) {
-    console.error("Error sending SMS:", error);
+    console.error("Error sending email:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
+    
+    // Don't throw the error, just log it
+    return null;
   }
 }
 
-export async function batchSendSMS(
+/**
+ * Send emails to multiple recipients
+ */
+export async function batchSendEmails(
   message_content: string,
-  destination_numbers: string[]
-) {
+  destination_emails: string[]
+): Promise<number> {
+  // Skip if there are no emails or no message content
+  if (!destination_emails.length || !message_content) {
+    console.log('No email addresses provided or empty message. Skipping email send.');
+    return 0;
+  }
+
   try {
-    destination_numbers.map((destination_number: string) => {
-      sendSms(message_content, destination_number);
-    });
+    console.log(`Sending batch emails to ${destination_emails.length} recipients`);
+    console.log('Email addresses:', destination_emails);
+    
+    // Process one message at a time 
+    let successCount = 0;
+    for (const email of destination_emails) {
+      try {
+        const result = await sendEmail(message_content, email);
+        if (result) successCount++;
+        // Add a small delay between sends
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (innerError) {
+        console.error(`Failed to send to ${email}:`, innerError);
+      }
+    }
+    
+    console.log(`Successfully sent ${successCount} out of ${destination_emails.length} emails`);
+    return successCount;
   } catch (error) {
-    console.log("Error with sending batch SMS");
+    console.error("Error with sending batch emails:", error);
+    return 0;
   }
 }

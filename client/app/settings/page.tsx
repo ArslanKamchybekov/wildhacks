@@ -11,6 +11,7 @@ import { DashboardShell } from "@/components/dashboard-shell"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { updateUser } from "@/app/actions/user"
 import { DashboardHeader } from "@/components/dashboard-header"
+import { UserConnections } from "@/components/user-connections"
 
 export default function SettingsPage() {
   const { dbUser, auth0User, isLoading } = useCurrentUser()
@@ -126,15 +127,8 @@ export default function SettingsPage() {
             </CardFooter>
           </Card>
         </form>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>
-              Information about your account.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        
+        <UserConnections userId={dbUser._id} />
       </div>
     </DashboardShell>
   )

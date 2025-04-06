@@ -89,7 +89,7 @@ export default function UserTicksManager({
       await loadUserTicks(selectedUser);
     } catch (error) {
       console.error('Error adding tick:', error);
-      setErrorMessage('Failed to add observation. Please try again.');
+      setErrorMessage('Failed to add tick. Please try again.');
     } finally {
       setIsAddingTick(false);
     }
@@ -111,12 +111,6 @@ export default function UserTicksManager({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Clipboard className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-medium">Member Observations</h3>
-        </div>
-      </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
         {groupMembers.map((email) => (
@@ -146,9 +140,9 @@ export default function UserTicksManager({
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add Observation</DialogTitle>
+                    <DialogTitle>Add Tick</DialogTitle>
                     <DialogDescription>
-                      Add a new observation about {selectedUser}.
+                      Add a new tick about {selectedUser}.
                     </DialogDescription>
                   </DialogHeader>
                   
@@ -171,7 +165,7 @@ export default function UserTicksManager({
                       Cancel
                     </Button>
                     <Button onClick={handleAddTick} disabled={isAddingTick}>
-                      {isAddingTick ? 'Adding...' : 'Add Observation'}
+                      {isAddingTick ? 'Adding...' : 'Add Tick'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
