@@ -17,7 +17,8 @@ export async function generateRoastForUser(
   userTicks: any[] = [],
   currentUrl?: string,
   alignmentReason?: string,
-  sessionGoal?: string
+  sessionGoal?: string,
+  roastLevel?: number
 ): Promise<string> {
   try {
     // Initialize the model
@@ -56,6 +57,17 @@ They are currently browsing: ${currentUrl}`;
     // Add session goal if available
     if (sessionGoal) {
       contextInfo += `\nTheir current study goal is: ${sessionGoal}`;
+    }
+
+    // Add roast level if available
+    if (roastLevel) {
+      contextInfo += `\nRoast level: ${roastLevel}
+      if roast level is 10, be as savage as possible. Use the most savage language possible.
+      if roast level is 8, be quite spicy. Use some spicy language.
+      if roast level is 6, be moderately spicy. Use some spicy language.
+      if roast level is 4, be mildly playful. Use some playful language.
+      if roast level is 2, be gentle and supportive. Use some supportive language.
+      `;
     }
     
     const prompt = `Generate a funny, light-hearted roast for ${userName} who is studying.

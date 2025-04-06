@@ -46,11 +46,7 @@ export async function POST(req: NextRequest) {
     let messageToSend = null;
     
     // Determine the appropriate message based on focus state
-    if (focus === 'focused') {
-      // For focused state, send a positive message
-      messageToSend = `${dbUser.name || dbUser.email.split('@')[0]} is focused and ${emotion === 'happy' ? 'happy' : 'working hard'}! 🦆`;
-      console.log('User is focused, sending positive message');
-    } else {
+    if (focus !== 'focused') {
       // For distracted state, generate a roast or positive message
       roastContent = await generateRoast(dbUser._id, emotion, focus, current_tab_url);
       

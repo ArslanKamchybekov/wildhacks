@@ -33,15 +33,23 @@ export async function generateRoast(
     const allGroups = await Group.find({});
     let group = null;
     let groupContext = ``;
+    let roastLevel = 5; // Default roast level if not specified
     
     for (const g of allGroups) {
       try {
         const membersArray = JSON.parse(g.members);
         if (membersArray.includes(user.email)) {
           group = g;
+          // Get the roast level if available
+          if (g.geminiRoastLevel !== undefined) {
+            roastLevel = g.geminiRoastLevel;
+            console.log(`Using group roast level: ${roastLevel}`);
+          }
+          
           groupContext = `
             Group Name: ${g.name}
             Group Members: ${membersArray.join(', ')}
+            Roast Level: ${roastLevel}
           `;
           break;
         }
@@ -134,14 +142,16 @@ export async function generateRoast(
       }
       
       // Generate roast with appropriate context
+      const userName = user.name || user.email.split('@')[0];
       roastContent = await generateRoastForUser(
-        user.name || user.email.split('@')[0], // Use name or first part of email
-        focus, // Pass focus directly
-        emotion, // Pass emotion directly
+        userName,
+        emotion,
+        focus,
         ticks,
         isEmptyUrl ? undefined : current_tab_url, // Only pass URL if it's valid
         isEmptyUrl ? undefined : alignmentReason, // Only pass alignment reason if URL is valid
-        activeSession?.goal // Pass the active session goal if available
+        activeSession?.goal, // Pass the active session goal if available
+        roastLevel // Pass the roast level (default or from group)
       );
     } else {
       console.log('URL aligns with session goal. No roast needed.');
