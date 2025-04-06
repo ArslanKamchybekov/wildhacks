@@ -248,7 +248,6 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
   async function fetchGroupTicks() {
     try {
       const allGroupTicks = await getGroupTicks(groupId)
-      console.log(allGroupTicks)
       
       // Organize ticks by user
       const ticksByUser: {[userEmail: string]: Tick[]} = {}

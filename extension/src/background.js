@@ -1,168 +1,212 @@
 // Background script for the GoalKeeper Pet extension
 // This script runs in the background and tracks tab changes
 
-// API endpoint for checking URL productivity
-const API_ENDPOINT = 'https://wildhacks-api.vercel.app/api/check-url';
-// Default pet health
-const MAX_HEALTH = 100;
-// Health decrease amount for unproductive sites
-const HEALTH_DECREASE = 5;
-// Cooldown period in milliseconds to avoid too frequent checks
-const CHECK_COOLDOWN = 10000; // 10 seconds
+// API endpoint for sending roasts
+const ROAST_ENDPOINT = 'http://localhost:3000/api/cv-event';
 
-// Store the last check time to implement cooldown
+// Debug mode - set to true to see detailed logs
+const DEBUG = true;
+
+// Helper function for logging
+function debugLog(...args) {
+  if (DEBUG) {
+    console.log(...args);
+  }
+}
+
+// Cooldown for URL checks (in milliseconds)
+const CHECK_COOLDOWN = 5000; // 5 seconds
 let lastCheckTime = 0;
 
-// Initialize pet data in storage if it doesn't exist
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.get(['petHealth', 'petType', 'goals', 'userId'], (result) => {
-    if (result.petHealth === undefined) {
-      chrome.storage.local.set({ petHealth: MAX_HEALTH });
-    }
-    if (result.petType === undefined) {
-      chrome.storage.local.set({ petType: 'dragon' }); // Default pet type
-    }
-    if (result.goals === undefined) {
-      chrome.storage.local.set({ goals: [] }); // Empty goals array
-    }
-    if (result.userId === undefined) {
-      chrome.storage.local.set({ userId: null }); // No user ID initially
+// Tab monitoring state
+let isMonitoring = false;
+let activeTabId = null;
+
+// Start monitoring tabs
+function startTabMonitoring() {
+  if (isMonitoring) return;
+  
+  isMonitoring = true;
+  
+  // Add tab update listener
+  chrome.tabs.onActivated.addListener(handleTabActivated);
+  chrome.tabs.onUpdated.addListener(handleTabUpdated);
+  
+  // Check current active tab
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length > 0) {
+      const tab = tabs[0];
+      activeTabId = tab.id;
+      processTabChange(tab.url, tab.id);
     }
   });
-});
+  
+  console.log('Tab monitoring started');
+}
 
-// Listen for tab updates (when user navigates to a new page)
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  // Only check when the page has finished loading and has a URL
-  if (changeInfo.status === 'complete' && tab.url) {
-    checkURL(tab.url, tabId);
+// Stop monitoring tabs
+function stopTabMonitoring() {
+  if (!isMonitoring) return;
+  
+  isMonitoring = false;
+  
+  // Remove tab update listeners
+  chrome.tabs.onActivated.removeListener(handleTabActivated);
+  chrome.tabs.onUpdated.removeListener(handleTabUpdated);
+  
+  console.log('Tab monitoring stopped');
+}
+
+// Handle tab activated event
+function handleTabActivated(activeInfo) {
+  activeTabId = activeInfo.tabId;
+  
+  chrome.tabs.get(activeTabId, (tab) => {
+    processTabChange(tab.url, tab.id);
+  });
+}
+
+// Handle tab updated event
+function handleTabUpdated(tabId, changeInfo, tab) {
+  if (changeInfo.status === 'complete' && tabId === activeTabId) {
+    processTabChange(tab.url, tabId);
   }
-});
+}
 
-// Listen for tab activation (when user switches tabs)
-chrome.tabs.onActivated.addListener((activeInfo) => {
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
-    if (tab.url) {
-      checkURL(tab.url, tab.id);
-    }
-  });
-});
-
-// Function to check if a URL is productive based on user goals
-async function checkURL(url, tabId) {
+// Process tab change and send data to API
+async function processTabChange(url, tabId) {
   // Implement cooldown to avoid too frequent checks
   const now = Date.now();
   if (now - lastCheckTime < CHECK_COOLDOWN) {
     return;
   }
   lastCheckTime = now;
-
-  // Skip checking for browser internal pages, extension pages, etc.
-  if (url.startsWith('chrome://') || 
+  
+  debugLog('Processing URL:', url);
+  
+  // Skip browser internal pages
+  if (!url || 
+      url.startsWith('chrome://') || 
       url.startsWith('chrome-extension://') || 
-      url.startsWith('about:') ||
+      url.startsWith('about:') || 
       url.startsWith('file://')) {
+    debugLog('Skipping browser internal URL:', url);
     return;
   }
-
+  
+  // Skip localhost URLs but log them
+  if (url.includes('localhost')) {
+    debugLog('Skipping localhost URL:', url);
+    return;
+  }
+  
+  // At this point, we have a valid external URL to process
+  debugLog('Valid external URL detected:', url);
+  
   try {
-    // Get user ID and goals from storage
-    const { userId, goals, petHealth } = await chrome.storage.local.get(['userId', 'goals', 'petHealth']);
+    // Get user email from storage
+    const userEmail = await getUserEmail();
+    console.log('Processing tab change for user email:', userEmail);
     
-    // If no user ID or goals, don't perform check
-    if (!userId || !goals || goals.length === 0) {
+    // If no user email, don't perform check
+    if (!userEmail) {
+      console.log('No user email found, skipping API call');
       return;
     }
 
-    // Prepare data for API request
-    const data = {
-      url: url,
-      userId: userId,
-      goals: goals
-    };
-
-    // Call the API to check if the URL is productive
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data)
-    });
-
-    const result = await response.json();
-
-    // Update pet health based on productivity check
-    if (!result.isProductive) {
-      // Calculate new health
-      const newHealth = Math.max(0, petHealth - HEALTH_DECREASE);
+    // Send data to the server for non-localhost URLs
+    try {
+      debugLog('Sending data for URL:', url, 'to endpoint:', ROAST_ENDPOINT);
       
-      // Update health in storage
-      chrome.storage.local.set({ petHealth: newHealth });
+      // Create the payload
+      const payload = {
+        emotion: 'not_detected',
+        focus: 'distracted',
+        thumbs_up: 'not_detected',
+        wave: 'not_detected',
+        timestamp: new Date().toISOString(),
+        user_email: userEmail,
+        current_tab_url: url
+      };
+      debugLog('Request payload:', JSON.stringify(payload));
       
-      // Send message to content script to update pet display
-      chrome.tabs.sendMessage(tabId, { 
-        action: 'updatePet', 
-        health: newHealth,
-        isProductive: false,
-        message: result.message || 'This site is not helping you reach your goals!'
-      });
+      // Make the API call with proper error handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      // If health reaches 0, notify user
-      if (newHealth === 0) {
-        chrome.tabs.sendMessage(tabId, { 
-          action: 'petDied',
-          message: 'Your pet has run out of health! Focus on your goals to revive it.'
+      try {
+        const response = await fetch(ROAST_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
+      
+        if (response.ok) {
+          const data = await response.json();
+          debugLog('Data sent successfully:', data);
+        } else {
+          console.error('Failed to send data:', await response.text());
+        }
+      } catch (fetchError) {
+        if (fetchError.name === 'AbortError') {
+          console.error('Request timed out after 10 seconds');
+        } else {
+          console.error('Error sending data:', fetchError.message);
+        }
+      } finally {
+        clearTimeout(timeoutId);
       }
-    } else {
-      // Send message that site is productive
-      chrome.tabs.sendMessage(tabId, { 
-        action: 'updatePet', 
-        health: petHealth,
-        isProductive: true,
-        message: result.message || 'This site is helping you reach your goals!'
-      });
+    } catch (error) {
+      console.error('Error in processTabChange:', error.message);
     }
   } catch (error) {
-    console.error('Error checking URL productivity:', error);
+    console.error('Error processing tab change:', error);
   }
 }
 
-// Listen for messages from popup or content script
+// Helper function to get user email from storage
+async function getUserEmail() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['userEmail'], (result) => {
+      resolve(result.userEmail || null);
+    });
+  });
+}
+
+// Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Handle login from popup
+  console.log('Background script received message:', message);
+  
   if (message.action === 'login') {
-    chrome.storage.local.set({ 
-      userId: message.userId,
-      goals: message.goals,
-      petType: message.petType || 'dragon',
-      petHealth: MAX_HEALTH
+    // Store user email
+    chrome.storage.local.set({
+      userEmail: message.userEmail,
+      isLoggedIn: true
+    }, function() {
+      console.log('User email saved to storage:', message.userEmail);
     });
-    sendResponse({ success: true });
-  }
-  
-  // Handle logout from popup
-  else if (message.action === 'logout') {
-    chrome.storage.local.set({ 
-      userId: null,
-      goals: [],
-      petHealth: MAX_HEALTH
+    
+    // Start monitoring tabs
+    startTabMonitoring();
+    
+    sendResponse({success: true, message: 'User logged in successfully'});
+    return true;
+  } else if (message.action === 'logout') {
+    // Clear user info
+    chrome.storage.local.set({
+      isLoggedIn: false,
+      userEmail: null
     });
-    sendResponse({ success: true });
-  }
-  
-  // Handle request for pet data
-  else if (message.action === 'getPetData') {
-    chrome.storage.local.get(['petHealth', 'petType', 'userId', 'goals'], (result) => {
-      sendResponse(result);
-    });
-    return true; // Required for async sendResponse
-  }
-  
-  // Handle manual health update (for testing)
-  else if (message.action === 'updateHealth') {
-    chrome.storage.local.set({ petHealth: message.health });
-    sendResponse({ success: true });
+    
+    console.log('User logged out');
+    
+    // Stop monitoring tabs
+    stopTabMonitoring();
+    
+    sendResponse({success: true, message: 'User logged out successfully'});
+    return true;
   }
 });

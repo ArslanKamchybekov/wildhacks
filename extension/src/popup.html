@@ -3,86 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GoalKeeper Pet</title>
+  <title>GoalKeeper Extension</title>
   <link rel="stylesheet" href="popup.css">
+  <style>
+    body {
+      width: 300px;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .section {
+      padding: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 8px 15px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    .error-message {
+      color: red;
+      margin-top: 10px;
+    }
+    .status-box {
+      background-color: #f1f1f1;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 15px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>GoalKeeper Pet</h1>
+      <h1>GoalKeeper Extension</h1>
     </div>
     
     <!-- Login Section (shown when not logged in) -->
     <div id="login-section" class="section">
-      <p>Connect to your GoalKeeper account to track your productivity and keep your pet healthy!</p>
-      <div class="input-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" placeholder="Enter your email">
+      <p>Enter your email to track your productivity:</p>
+      <div class="form-group">
+        <label for="email-input">Email:</label>
+        <input type="email" id="email-input" placeholder="Enter your email" required>
       </div>
-      <div class="input-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Enter your password">
-      </div>
-      <button id="login-btn" class="primary-btn">Login</button>
-      <p class="text-center">Don't have an account? <a href="#" id="signup-link">Sign up</a></p>
+      <button id="login-btn">Login</button>
+      <div id="login-error" class="error-message hidden"></div>
     </div>
     
-    <!-- Pet Status Section (shown when logged in) -->
+    <!-- Status Section (shown when logged in) -->
     <div id="pet-section" class="section hidden">
-      <div class="pet-container">
-        <img id="pet-image" src="assets/pet-normal.png" alt="Your pet">
-        <div class="health-container">
-          <div class="health-label">Health: <span id="health-value">100</span>%</div>
-          <div class="health-bar-container">
-            <div id="health-bar" class="health-bar"></div>
-          </div>
-        </div>
+      <div class="status-box">
+        <p id="status-message">Logged in. Tab tracking is active.</p>
       </div>
-      
-      <div class="stats-container">
-        <div class="stat">
-          <span class="stat-label">Productive Sites:</span>
-          <span id="productive-count" class="stat-value">0</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Unproductive Sites:</span>
-          <span id="unproductive-count" class="stat-value">0</span>
-        </div>
-      </div>
-      
-      <div class="goals-container">
-        <h3>Your Goals</h3>
-        <ul id="goals-list" class="goals-list">
-          <!-- Goals will be populated here -->
-        </ul>
-      </div>
-      
-      <button id="logout-btn" class="secondary-btn">Logout</button>
-    </div>
-    
-    <!-- Settings Section -->
-    <div id="settings-section" class="section hidden">
-      <h2>Settings</h2>
-      <div class="setting-group">
-        <label for="pet-type">Pet Type</label>
-        <select id="pet-type">
-          <option value="dragon">Dragon</option>
-          <option value="cat">Cat</option>
-          <option value="dog">Dog</option>
-        </select>
-      </div>
-      <div class="setting-group">
-        <label for="notification-toggle">Show Notifications</label>
-        <input type="checkbox" id="notification-toggle" checked>
-      </div>
-      <button id="save-settings-btn" class="primary-btn">Save Settings</button>
-      <button id="back-btn" class="secondary-btn">Back</button>
-    </div>
-    
-    <!-- Footer -->
-    <div class="footer">
-      <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
-      <a href="https://wildhacks.vercel.app" target="_blank" class="icon-btn" title="Open GoalKeeper">🏠</a>
+      <button id="logout-btn">Logout</button>
     </div>
   </div>
   

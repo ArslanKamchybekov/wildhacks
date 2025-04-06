@@ -1,30 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateCVEvent, processCVEvent } from '@/app/actions/cv-event';
+import { generateRoast } from '@/app/actions/cv-event';
 import { getCurrentActiveSession } from '@/app/actions/session';
 import { getUserByEmail } from '@/app/actions/user';
-import { getUserProfileDataSafe } from '@/lib/auth';
+import { getSession } from '@auth0/nextjs-auth0';
+import { createSystemMessage } from '@/app/actions/message';
+import Group from '@/models/group.model';
 
 export async function POST(req: NextRequest) {
   try {
     // Parse the request body
     const body = await req.json();
-    const { emotion, focus, thumbs_up, wave, timestamp } = body;
+    const { emotion, focus, thumbs_up, wave, timestamp, user_email, current_tab_url } = body;
 
-    // Get user from Auth0 session
-    const user = await getUserProfileDataSafe();
-    console.log('User from Auth0 session:', user);
-    
-    // Get user email from Auth0 session
-    const user_email = user?.email;
-    
-    // Check if user email is available
-    if (!user_email) {
-      return NextResponse.json(
-        { error: 'User not authenticated or email not available' },
-        { status: 401 }
-      );
-    }
-    
     // Get the user from the database
     const dbUser = await getUserByEmail(user_email);
     if (!dbUser?._id) {
@@ -42,61 +29,67 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Only generate a roast if focus is not 'focused'
+    let roastContent = null;
+    let urlAligned = false;
     
-    // Map the incoming data to our event types and values
-    let event_type = '';
-    let event_value = '';
-    
-    // Determine the most significant event to process
-    if (focus === 'distracted') {
-      event_type = 'eye_movement';
-      event_value = 'looking_away';
-    } else if (wave === 'detected') {
-      event_type = 'wave';
-      event_value = 'detected';
-    } else if (thumbs_up === 'detected') {
-      event_type = 'thumbs_up';
-      event_value = 'detected';
-    } else if (emotion && emotion !== 'neutral') {
-      event_type = 'emotion';
-      event_value = emotion;
+    if (focus !== 'focused') {
+      // Generate a roast directly without storing the event
+      // Pass emotion, focus, and URL data from the request body
+      roastContent = await generateRoast(dbUser._id, emotion, focus, current_tab_url);
+      
+      // If roastContent is empty string, it means the URL aligns with the session goal
+      if (roastContent === '') {
+        urlAligned = true;
+        roastContent = null;
+        console.log('URL aligns with session goal, no roast generated');
+      }
+      
+      // Find the user's group to send the roast to the group chat
+      if (roastContent) {
+        try {
+          // Find all groups
+          const allGroups = await Group.find({});
+          let groupData = null;
+          
+          // Find the user's group
+          for (const group of allGroups) {
+            try {
+              const membersArray = JSON.parse(group.members);
+              if (membersArray.includes(dbUser.email)) {
+                groupData = group;
+                break;
+              }
+            } catch (e) {
+              console.error('Error parsing group members:', e);
+            }
+          }
+          
+          // If a group is found, send the roast as a system message
+          if (groupData) {
+            await createSystemMessage(groupData._id.toString(), roastContent);
+            console.log('Roast sent to group chat:', roastContent);
+          }
+        } catch (error) {
+          console.error('Error sending roast to group chat:', error);
+        }
+      }
     }
     
-    // If no significant event was detected, return early
-    if (!event_type || !event_value) {
-      return NextResponse.json({
-        message: 'No significant event detected',
-        status: 'ok'
-      });
-    }
-    
-    // Validate event type and value
-    const validation = validateCVEvent(event_type, event_value);
-    if (!validation.isValid) {
-      return NextResponse.json(
-        { error: validation.errorMessage },
-        { status: 400 }
-      );
-    }
-    
-    // Process the CV event and generate a roast if needed
-    const result = await processCVEvent(
-      activeSession._id,
-      dbUser._id,
-      event_type,
-      event_value,
-      timestamp
-    );
-    
-    // Return the created event and roast if generated
+    // Return the response with roast and URL alignment status
     return NextResponse.json({
-      event_id: result.event._id,
-      session_id: activeSession._id,
+      status: 'ok',
       user_id: dbUser._id,
-      event_type,
-      event_value,
-      timestamp: result.event.event_timestamp,
-      roast: result.roast
+      session_id: activeSession._id,
+      emotion,
+      focus,
+      thumbs_up,
+      wave,
+      timestamp: timestamp || new Date().toISOString(),
+      roast: roastContent,
+      url_aligned: urlAligned,
+      current_tab_url
     });
   } catch (error) {
     console.error('Error processing CV event:', error);

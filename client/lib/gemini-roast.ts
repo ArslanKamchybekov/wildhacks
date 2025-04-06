@@ -22,7 +22,9 @@ export async function generateRoastForUser(
   userName: string,
   eventType: string,
   eventValue: string,
-  userTicks: any[] = []
+  userTicks: any[] = [],
+  currentUrl?: string,
+  alignmentReason?: string
 ): Promise<string> {
   try {
     // Initialize the model
@@ -39,16 +41,24 @@ export async function generateRoastForUser(
     }
     
     // Create a prompt that focuses specifically on generating a roast
+    // Include the current URL and alignment reason if available
+    let urlContext = currentUrl ? `They are currently browsing: ${currentUrl}` : '';
+    if (alignmentReason) {
+      urlContext += `\nReason this is distracting: ${alignmentReason}`;
+    }
+    
     const prompt = `Generate a funny, light-hearted roast for ${userName} who is studying.
 The computer vision system detected that they were "${eventValue}" (event type: ${eventType}).
+${urlContext}
 ${tickContext}
 
 Create a playful and motivational roast that:
 1. References their specific behavior (${eventValue})
-2. Is humorous but not mean-spirited
-3. Encourages them to stay focused on their studies
-4. Is 1-2 sentences maximum
-5. Has a clever or witty tone
+2. ${currentUrl ? 'Mentions the website they are visiting if appropriate' : 'Is personalized to them'}
+3. Is humorous but not mean-spirited
+4. Encourages them to stay focused on their studies
+5. Is 1-2 sentences maximum
+6. Has a clever or witty tone
 
 The roast should be personalized to ${userName} and their specific behavior.`;
 
