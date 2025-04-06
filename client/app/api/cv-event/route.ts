@@ -15,6 +15,8 @@ const EMAIL_COOLDOWN_PERIOD = 10000; // 10 seconds in milliseconds
 export async function POST(req: NextRequest) {
   try {
     // Parse the request body
+    const session = await getSession();
+    console.log('Session:', session);
     const body = await req.json();
     const { emotion, focus, thumbs_up, wave, timestamp, user_email, current_tab_url } = body;
 
