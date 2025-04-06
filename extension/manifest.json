@@ -17,7 +17,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://localhost:3000/*"],
+      "matches": ["<all_urls>"],
       "js": ["src/content-script.js", "src/content.js"],
       "css": ["src/content.css"]
     }

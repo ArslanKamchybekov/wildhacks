@@ -20,7 +20,7 @@ function initializePet() {
   // Create pet image
   const petImg = document.createElement('img');
   petImg.id = 'goalkeeper-pet-img';
-  petImg.src = chrome.runtime.getURL('../assets/duckidle.gif');
+  petImg.src = chrome.runtime.getURL('assets/duckidle.gif');
   petElement.appendChild(petImg);
   
   // Create health bar container
@@ -77,13 +77,13 @@ function updatePetDisplay(health) {
   console.log(health)
   if (petImg) {
     if (health > 70) {
-      petImg.src = chrome.runtime.getURL('../assets/duckidle.gif');
+      petImg.src = chrome.runtime.getURL('assets/duckidle.gif');
     } else if (health > 30) {
-      petImg.src = chrome.runtime.getURL('../assets/duckdamage.gif');
+      petImg.src = chrome.runtime.getURL('assets/duckdamage.gif');
     } else if (health > 0) {
-      petImg.src = chrome.runtime.getURL('../assets/duckcritical.gif');
+      petImg.src = chrome.runtime.getURL('assets/duckcritical.gif');
     } else {
-      petImg.src = chrome.runtime.getURL('../assets/duckdeath.gif');
+      petImg.src = chrome.runtime.getURL('assets/duckdeath.gif');
     }
   }
 }
