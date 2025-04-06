@@ -35,7 +35,11 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
 );
 
-function ManualCaptureBetForm(dbUser: any) {
+interface ManualCaptureBetFormProps {
+  dbUser: any;
+}
+
+function ManualCaptureBetForm({ dbUser }: ManualCaptureBetFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   
@@ -167,6 +171,7 @@ function ManualCaptureBetForm(dbUser: any) {
 
 export default function SettingsPage() {
   const { dbUser, auth0User, isLoading } = useCurrentUser();
+  console.log(dbUser);
   const router = useRouter();
 
   // Profile State
@@ -298,7 +303,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <Elements stripe={stripePromise}>
-              <ManualCaptureBetForm />
+              <ManualCaptureBetForm dbUser={dbUser} />
             </Elements>
           </CardContent>
         </Card>

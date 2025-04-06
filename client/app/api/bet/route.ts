@@ -10,6 +10,8 @@ export async function POST(request: NextRequest) {
     // 2. Get data from request body
     const { userId, betAmount, paymentIntentId } = await request.json();
 
+    console.log("Received bet data:", { userId, betAmount, paymentIntentId });
+
     if (!userId || !betAmount || !paymentIntentId) {
       throw new Error("Missing required fields.");
     }
