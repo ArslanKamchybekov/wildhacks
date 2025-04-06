@@ -41,12 +41,12 @@ Follow these steps to clone and run the project locally:
    ```bash
    git clone https://github.com/yourusername/waddl.git
    ```
-2. **Navigate to the Project Directory**
-   Change your working directory to the project folder:
+2. **Navigate to the Client Directory**
+   Change your working directory to the client folder:
    ```bash
-   cd waddl
+   cd waddl/client
    ```
-3. **Install Dependencies**
+3. **Install Client Dependencies**
    If you're using npm:
    ```bash
    npm install
@@ -64,6 +64,35 @@ Follow these steps to clone and run the project locally:
    ```bash
    yarn dev
    ```
+
+5. **Navigate to the Server directory**
+   Change your working directory to server:
+   ```bash
+   cd ../server
+   ```
+
+6. **Create a Venv and Activate It***
+   ```bash
+   py venv venv
+   venv/Scripts/activate
+   ```
+
+6. **Install Computer Vision Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+7. **Navigate to Vision Folder**
+   ```bash
+   cd vision
+   ```
+
+8. **Run the Computer Vision**
+   ```bash
+   py app.py
+   ```
+   
+   
    Visit http://localhost:3000 in your browser to see the app in action.
 
 ## Challenges We Faced
