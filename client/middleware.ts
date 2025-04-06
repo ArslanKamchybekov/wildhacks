@@ -1,40 +1,19 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { getSession } from '@auth0/nextjs-auth0/edge';
+import { NextRequest, NextResponse } from 'next/server';
+import { withMiddlewareAuthRequired, getSession } from '@auth0/nextjs-auth0/edge';
 
-// This middleware will handle authentication for your application
-export default async function middleware(req: NextRequest) {
-  // Get the user session from Auth0
+export default withMiddlewareAuthRequired(async (req: NextRequest) => {
   const res = NextResponse.next();
-  const session = await getSession(req, res);
-  
-  // Add user info to request headers so it can be accessed in API routes
-  if (session?.user) {
-    // Clone the request headers
-    const requestHeaders = new Headers(req.headers);
-    
-    // Add user information to headers
-    requestHeaders.set('x-user-email', session.user.email || '');
-    requestHeaders.set('x-user-name', session.user.name || '');
-    requestHeaders.set('x-user-sub', session.user.sub || '');
-    
-    // Create a new response with the updated headers
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-  }
-  
-  // If no user session, just continue without adding headers
-  return res;
-}
 
-// Configure which paths require authentication
+  const user = await getSession(req, res);
+
+  if (user) {
+    // Do what you want...
+  }
+
+  return res;
+});
+
+// only work on the '/' path
 export const config = {
-  // Protect API routes and app routes
-  matcher: [
-    // Apply middleware to all routes to pass user data when available
-    '/(.*)',
-  ],
+  matcher: '/',
 };

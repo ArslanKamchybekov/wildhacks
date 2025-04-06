@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waddl Vision - Dashboard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .dashboard {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+            text-align: center;
+        }
+        .user-info {
+            background-color: #e9f7ef;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .status-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .status-card {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .status-card h3 {
+            margin-top: 0;
+            color: #555;
+            font-size: 1rem;
+        }
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .controls {
+            text-align: center;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn-danger {
+            background-color: #f44336;
+        }
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        .refresh {
+            color: #777;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+    </style>
+    <script>
+        // Auto-refresh the state data every second
+        function fetchState() {
+            fetch('/api/state')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('emotion-value').textContent = data.emotion;
+                    document.getElementById('focus-value').textContent = data.focus;
+                    document.getElementById('thumbs-up-value').textContent = data.thumbs_up === 'detected' ? 'Yes' : 'No';
+                    document.getElementById('wave-value').textContent = data.wave === 'detected' ? 'Yes' : 'No';
+                    document.getElementById('timestamp-value').textContent = new Date(data.timestamp).toLocaleTimeString();
+                })
+                .catch(error => console.error('Error fetching state:', error));
+        }
+
+        // Set up interval for auto-refresh
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchState(); // Initial fetch
+            setInterval(fetchState, 1000); // Then every second
+        });
+    </script>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Waddl Vision Dashboard</h1>
+        
+        <div class="user-info">
+            <h2>Welcome, {{ user_email }}</h2>
+            <p>Vision detection is active and sending data to Waddl</p>
+        </div>
+        
+        <div class="status-container">
+            <div class="status-card">
+                <h3>Emotion</h3>
+                <div id="emotion-value" class="status-value">Loading...</div>
+            </div>
+            <div class="status-card">
+                <h3>Focus</h3>
+                <div id="focus-value" class="status-value">Loading...</div>
+            </div>
+            <div class="status-card">
+                <h3>Thumbs Up</h3>
+                <div id="thumbs-up-value" class="status-value">Loading...</div>
+            </div>
+            <div class="status-card">
+                <h3>Wave</h3>
+                <div id="wave-value" class="status-value">Loading...</div>
+            </div>
+            <div class="status-card">
+                <h3>Last Update</h3>
+                <div id="timestamp-value" class="status-value">Loading...</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <a href="/logout" class="btn btn-danger">Logout</a>
+        </div>
+        
+        <p class="refresh">Data refreshes automatically every second</p>
+    </div>
+</body>
+</html>
