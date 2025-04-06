@@ -26,7 +26,7 @@ Our tech stack and tools helped us bring Waddl to life:
 - **Computer Vision**:
   - OpenCV, MediaPipe, DeepFace for face, gaze, and gesture tracking along with emotion analysis.
 - **Communication**:
-  - Twilio for messaging beyond the app.
+  - Email for messaging beyond the app.
 - **AI Integration**:
   - Gemini to parse natural language goals and generate custom motivational roasts.
 
