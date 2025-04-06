@@ -1,17 +1,17 @@
-# Waddl: The Ultimate Productivity App
+# Waddl: The Ultimate Productivity App 🦆
 
-Waddl is a real-time productivity web app with a twist—a virtual duck companion that holds you accountable. It's not just a reminder to focus; it **DEMANDS** you meet your goals, blending fun, accountability, and a little bit of chaos into your daily routine.
+Waddl is a real-time productivity computer vision web app with a twist—a virtual duck companion that holds you accountable. It's not just a reminder to focus; it **DEMANDS** you meet your goals, blending fun, accountability, and a little bit of chaos into your daily routine.
 
 ## Inspiration
 
-We set out to build an app that goes beyond the typical productivity reminder. Drawing inspiration from Tamagotchis, sports betting, and our playful habit of roasting each other, Waddl is the love child of our interests—quirky, intense, and designed to push you toward success (at the cost of your wallet, honor, and an adorable pet).
+We set out to build an app that goes beyond the typical productivity reminder. Drawing inspiration from Tamagotchis, sports betting, and our playful habit of roasting each other, Waddl is the love child of our interests—quirky, intense, and designed to push you toward success (at the cost of your honor and an adorable pet).
 
-## What It Does 🦆
+## What It Does
 
-- **Real-Time Productivity**: Monitor your progress with a dynamic web app.
-- **Virtual Duck Companion**: Bond with a cute duck via your webcam. If you slack off and miss your goals, **the duck dies**.
-- **Shared Experience**: Raise a duck with friends and even place bets on your commitments using real money.
-- **Motivational Roasts**: Get encouraging—and sometimes brutally honest—roasts powered by Gemini AI.
+- **Real-Time Productivity**: Monitor your progress through computer vision and an extension, built around a dynamic web app.
+- **Virtual Duck Companion**: Bond with a cute duck via your webcam (and give it a thumbs up/wave, trust us!). If you slack off and miss your goals, **the duck dies**.
+- **Shared Experience**: Raise a duck with friends and hold each other accountable.
+- **Motivational Roasts**: Get encouraging—and sometimes brutally honest—roasts powered by Gemini AI (in front of everyone).
 
 ## How We Built It
 
@@ -21,14 +21,12 @@ Our tech stack and tools helped us bring Waddl to life:
   - Next.js, Tailwind CSS, ShadCn, Three.js for a fast, modern, and engaging UI.
 - **Backend & Authentication**:
   - MongoDB & Auth0 for a secure backend and user management.
-- **Real-Money Integration**:
-  - Stripe to handle real-money bets on your goals.
 - **Browser Monitoring**:
   - Chrome Extension API to track your activity in real time.
 - **Computer Vision**:
   - OpenCV, MediaPipe, DeepFace for face, gaze, and gesture tracking along with emotion analysis.
 - **Communication**:
-  - Twilio for messaging beyond the app.
+  - Email for messaging beyond the app.
 - **AI Integration**:
   - Gemini to parse natural language goals and generate custom motivational roasts.
 
