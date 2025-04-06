@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Code2, Database, Lock, Brain, Camera, Palette, Zap, Mail } from "lucide-react"
+import { Code2, Database, Lock, Brain, Camera, Palette, Zap, Mail, CreditCard } from "lucide-react"
 import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
 
@@ -66,9 +66,9 @@ export default function TechStackCard() {
       bgGlow: "bg-pink-500/10",
     },
     {
-      name: "Tailwind CSS",
-      icon: <Palette className="h-6 w-6" />,
-      description: "Utility-first CSS for responsive, clean interfaces",
+      name: "Stripe",
+      icon: <CreditCard className="h-6 w-6" />,
+      description: "Payment processing and virtual pet management",
       color: "from-cyan-500 to-sky-400",
       shadowColor: "rgba(6, 182, 212, 0.5)",
       borderColor: "border-cyan-500/30",
