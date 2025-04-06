@@ -46,19 +46,33 @@ function checkCurrentUrl() {
     return;
   }
   
+  log('Checking current URL...');
+  
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    if (tabs.length === 0) return;
+    if (tabs.length === 0) {
+      log('No active tabs found');
+      return;
+    }
     
     const currentUrl = tabs[0].url;
+    log('Current active tab URL:', currentUrl);
     
     // Skip internal browser pages and localhost URLs
-    if (!currentUrl || 
-        currentUrl.startsWith('chrome://') ||
+    if (!currentUrl) {
+      log('Empty URL, skipping');
+      return;
+    }
+    
+    if (currentUrl.startsWith('chrome://') ||
         currentUrl.startsWith('chrome-extension://') ||
         currentUrl.startsWith('about:') ||
-        currentUrl.startsWith('file://') ||
-        currentUrl.includes('localhost')) {
-      log('Skipping internal or localhost URL:', currentUrl);
+        currentUrl.startsWith('file://')) {
+      log('Skipping browser internal URL:', currentUrl);
+      return;
+    }
+    
+    if (currentUrl.includes('localhost')) {
+      log('Skipping localhost URL:', currentUrl);
       return;
     }
     
@@ -287,15 +301,24 @@ function startCvPolling() {
   // Also start URL change monitoring
   log("Starting URL change monitoring");
   setInterval(checkCurrentUrl, 1000); // Check for URL changes every second
-  checkCurrentUrl();
+  
+  // Initial URL check with a delay to ensure extension is fully loaded
+  setTimeout(() => {
+    log("Performing initial URL check");
+    checkCurrentUrl();
+  }, 1000);
 }
 
 // Listen for tab updates to detect URL changes
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete') {
-    // A tab has completely loaded, check if it's the active tab
+  log('Tab updated:', { tabId, changeInfo, url: tab.url });
+  
+  // Check if URL has changed or page has loaded completely
+  if (changeInfo.url || changeInfo.status === 'complete') {
+    // A tab's URL has changed or has completely loaded, check if it's the active tab
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       if (tabs.length > 0 && tabs[0].id === tabId) {
+        log('Active tab updated, checking URL');
         checkCurrentUrl();
       }
     });
@@ -305,7 +328,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // Listen for tab activation changes
 chrome.tabs.onActivated.addListener(activeInfo => {
   // User switched to a different tab, check its URL
-  checkCurrentUrl();
+  log('Tab activated:', activeInfo);
+  
+  // Add a small delay to ensure the tab info is fully available
+  setTimeout(() => {
+    checkCurrentUrl();
+  }, 100);
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -370,6 +398,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.storage.local.set({
   userEmail: 'arslankamcybekov7@gmail.com',
   isLoggedIn: true
+}, () => {
+  log('Test user email set in storage');
 });
+
+// Make sure the manifest.json has these permissions:
+// "permissions": [
+//   "storage",
+//   "tabs",
+//   "activeTab"
+// ]
 
 startCvPolling();
