@@ -10,7 +10,6 @@ export default function Home() {
   const { user } = useUser()
   useEffect(() => {
     if (user) {
-      console.log(user)
       createUser({
         name: user.name!,
         email: user.email!,

@@ -9,9 +9,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getRecentMessagesByGroupId, createMessage, createSystemMessage } from "@/app/actions/message"
 import { getGroupById } from "@/app/actions/group"
-import { getUserByEmail } from "@/app/actions/user"
-import { getGroupTicks, getUserTicksInGroup } from "@/app/actions/tick"
-import { generateResponseWithContext, generateResponseWithTextContext } from "@/lib/gemini"
+import { getUserByEmail, getUserById } from "@/app/actions/user"
+import { getGroupTicks } from "@/app/actions/tick"
+import { generateResponseWithTextContext } from "@/lib/gemini"
 import { AddTickDialog } from "@/components/add-tick-dialog"
 import { Send, Bot, Info } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
@@ -89,22 +89,27 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
         // Fetch messages
         const fetchedMessages = await getRecentMessagesByGroupId(groupId)
         
-        // Transform messages for display
-        const formattedMessages = fetchedMessages.map(msg => ({
-          id: msg._id,
-          content: msg.content,
-          userId: msg.userId,
-          createdAt: new Date(msg.createdAt),
-          userName: msg.userId ? 
-            groupMembers.find(m => m.email === msg.userId)?.name || "User" : 
-            "Gemini Assistant"
+        // Transform messages for display with proper user names
+        const formattedMessages = await Promise.all(fetchedMessages.map(async msg => {
+          let userName = "Gemini Assistant"
+          if (msg.userId) {
+            const userObj = await getUserById(msg.userId)
+            userName = userObj?.name || msg.userId
+          }
+          
+          return {
+            id: msg._id,
+            content: msg.content,
+            userId: msg.userId,
+            createdAt: new Date(msg.createdAt),
+            userName
+          }
         }))
         
         setMessages(formattedMessages)
         
         // Fetch group ticks
-        const ticks = await fetchGroupTicks()
-        console.log(ticks)
+        await fetchGroupTicks()
         
         // If no messages, send a welcome message from Gemini
         if (formattedMessages.length === 0) {
@@ -140,6 +145,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
     scrollToBottom()
   }, [messages])
   
+
   const fetchNewMessages = async () => {
     if (!groupId) return
     
@@ -148,12 +154,22 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
       
       // Only update if there are new messages
       if (fetchedMessages.length > messages.length) {
-        const formattedMessages = fetchedMessages.map(msg => ({
-          id: msg._id,
-          content: msg.content,
-          userId: msg.userId,
-          createdAt: new Date(msg.createdAt),
-          userName: msg.userId ? "User" : "Gemini Assistant"
+        // Create formatted messages with proper user names
+        const formattedMessages = await Promise.all(fetchedMessages.map(async msg => {
+          let userName = "Gemini Assistant"
+          
+          if (msg.userId) {
+            const userObj = await getUserById(msg.userId)
+            userName = userObj?.name || msg.userId
+          }
+          
+          return {
+            id: msg._id,
+            content: msg.content,
+            userId: msg.userId,
+            createdAt: new Date(msg.createdAt),
+            userName
+          }
         }))
         
         setMessages(formattedMessages)
@@ -319,15 +335,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
       sendMessage()
     }
   }
-  
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2)
-  }
+
   
   return (
     <div className="flex flex-col h-[600px] border rounded-lg overflow-hidden">
@@ -365,7 +373,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
                       <AvatarImage src="/gemini.png" alt="Gemini" />
                     )}
                     <AvatarFallback>
-                      {message.userId ? getInitials(message.userName || "User") : <Bot className="h-5 w-5" />}
+                      {message.userId ? (message.userName || "User") : <Bot className="h-5 w-5" />}
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -399,7 +407,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
                 {message.userId === userId && (
                   <Avatar>
                     <AvatarImage src={user?.picture || ""} alt="You" />
-                    <AvatarFallback>{getInitials(user?.name || "You")}</AvatarFallback>
+                    <AvatarFallback>{(user?.name || "You")}</AvatarFallback>
                   </Avatar>
                 )}
               </div>

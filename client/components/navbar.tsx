@@ -1,14 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Target } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useUser } from "@auth0/nextjs-auth0/client"
+import { LogoutButton } from "@/components/logout-button"
 
 export function Navbar() {
-  const { user } = useUser()
+  const { user, isLoading } = useUser()
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
@@ -28,9 +28,12 @@ export function Navbar() {
               </Link>
             </>
           ) : (
-            <Link href="/dashboard">
-              <Button size="sm">Dashboard</Button>
-            </Link>
+            <>
+              <Link href="/dashboard">
+                <Button size="sm">Dashboard</Button>
+              </Link>
+              <LogoutButton />
+            </>
           )}
         </div>
       </div>

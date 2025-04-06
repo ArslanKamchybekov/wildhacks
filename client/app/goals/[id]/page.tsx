@@ -11,7 +11,7 @@ import Link from "next/link"
 export default function GoalDetailPage({ params }: { params: { id: string } }) {
   // Mock data - in a real app, you would fetch this from your API
   const goal = {
-    id: params.id,
+    id: params?.id,
     title: "Learn to play guitar",
     description: "Master basic chords and be able to play 3 songs from start to finish",
     deadline: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
@@ -59,7 +59,7 @@ export default function GoalDetailPage({ params }: { params: { id: string } }) {
   return (
     <DashboardShell>
       <DashboardHeader heading={goal.title} text={goal.description}>
-        <Link href={`/goals/${params.id}/submit`}>
+        <Link href={`/goals/${params?.id}/submit`}>
           <Button>
             <Upload className="mr-2 h-4 w-4" /> Submit Progress
           </Button>
@@ -122,7 +122,7 @@ export default function GoalDetailPage({ params }: { params: { id: string } }) {
             <CardDescription>Personalized insights for this goal</CardDescription>
           </CardHeader>
           <CardContent>
-            <AiInsights goalId={params.id} />
+            <AiInsights goalId={params?.id} />
           </CardContent>
         </Card>
       </div>

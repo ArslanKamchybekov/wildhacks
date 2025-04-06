@@ -23,7 +23,7 @@ export default function SubmitProgressPage({ params }: { params: { id: string } 
 
   // Mock data - in a real app, you would fetch this from your API
   const goal = {
-    id: params.id,
+    id: params?.id,
     title: "Learn to play guitar",
     milestones: [
       { id: "1", title: "Purchase a guitar and accessories", completed: true },
@@ -41,7 +41,7 @@ export default function SubmitProgressPage({ params }: { params: { id: string } 
     // Simulate API call
     setTimeout(() => {
       setLoading(false)
-      router.push(`/goals/${params.id}`)
+      router.push(`/goals/${params?.id}`)
     }, 1500)
   }
 

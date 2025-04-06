@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "Goals",
-    href: "/goals",
+    href: "/goals/session",
     icon: Target,
   },
   {
