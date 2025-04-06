@@ -1,0 +1,18 @@
+# Core vision libraries
+opencv-python>=4.5.5
+numpy>=1.21.0
+mediapipe>=0.10.0
+deepface>=0.0.79
+tensorflow>=2.10.0
+
+# Web server and API
+flask>=2.0.0
+requests>=2.25.0
+
+# Utilities
+python-dotenv>=0.19.0
+pillow>=9.0.0
+
+# Time and formatting
+python-dateutil>=2.8.0
+
