@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "GoalKeeper Pet",
+  "name": "Waddl Pet",
   "version": "1.0.0",
   "description": "A pet that monitors your browsing habits and loses health when you visit unproductive sites",
   "permissions": [

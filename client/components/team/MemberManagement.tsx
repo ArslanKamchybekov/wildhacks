@@ -139,7 +139,7 @@ export default function MemberManagement({
       
       <div className="space-y-2">
         {members.map((email) => (
-          <div key={email} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+          <div key={email} className="flex items-center justify-between p-2 rounded-md">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-gray-500" />
               <span className={email === currentUserEmail ? 'font-medium' : ''}>

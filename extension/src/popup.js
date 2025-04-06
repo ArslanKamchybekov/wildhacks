@@ -1,4 +1,4 @@
-// Popup JavaScript for the GoalKeeper Pet extension
+// Popup JavaScript for the Waddl Pet extension
 
 // DOM elements
 const loginSection = document.getElementById('login-section');

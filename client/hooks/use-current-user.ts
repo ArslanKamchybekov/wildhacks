@@ -1,18 +1,24 @@
-'use client';
+"use client";
 
-import { useUser as useAuth0User } from '@auth0/nextjs-auth0/client';
-import { useEffect, useState } from 'react';
-import { getUserByEmail } from '@/app/actions/user';
+import { useUser as useAuth0User } from "@auth0/nextjs-auth0/client";
+import { useEffect, useState } from "react";
+import { getUserByEmail } from "@/app/actions/user";
 
 /**
  * Custom hook that combines Auth0 user data with database user data
  * @returns Object containing Auth0 user, database user, loading state, and error
  */
 export function useCurrentUser() {
-  const { user: auth0User, error: auth0Error, isLoading: auth0Loading } = useAuth0User();
+  const {
+    user: auth0User,
+    error: auth0Error,
+    isLoading: auth0Loading,
+  } = useAuth0User();
   const [dbUser, setDbUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  console.log("USER: ", auth0User);
 
   useEffect(() => {
     async function fetchDbUser() {
@@ -25,7 +31,7 @@ export function useCurrentUser() {
         const userData = await getUserByEmail(auth0User.email);
         setDbUser(userData);
       } catch (err) {
-        console.error('Error fetching user from database:', err);
+        console.error("Error fetching user from database:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setIsLoading(false);
@@ -48,11 +54,14 @@ export function useCurrentUser() {
     name: auth0User?.name || dbUser?.name,
     picture: auth0User?.picture,
     // Combined user with Auth0 data taking precedence
-    user: auth0User && dbUser ? {
-      ...dbUser,
-      name: auth0User.name || dbUser.name,
-      picture: auth0User.picture,
-      email: auth0User.email
-    } : null
+    user:
+      auth0User && dbUser
+        ? {
+            ...dbUser,
+            name: auth0User.name || dbUser.name,
+            picture: auth0User.picture,
+            email: auth0User.email,
+          }
+        : null,
   };
 }

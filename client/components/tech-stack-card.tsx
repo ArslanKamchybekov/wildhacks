@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -188,7 +188,7 @@ function ManualCaptureBetForm() {
       {error && <p className="text-red-500">{error}</p>}
       {successMessage && <p className="text-green-500">{successMessage}</p>}
     </div>
-  );
+  )
 }
 
 export default function SettingsPage() {

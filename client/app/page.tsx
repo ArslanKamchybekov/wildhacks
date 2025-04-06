@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Target, Trophy, Users, Code } from "lucide-react";
+import { ArrowRight, Target, Trophy, Users, Code } from 'lucide-react';
 import { createUser } from "@/app/actions/user";
 import { useEffect, useRef } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
@@ -10,10 +10,14 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from "three/examples/jsm/controls/DragControls.js";
 import TechStackCard from "@/components/tech-stack-card";
 import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
   const { user } = useUser();
   const canvasRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
+  const isDarkTheme = theme === "dark";
 
   // Create user if authenticated
   useEffect(() => {
@@ -51,15 +55,17 @@ export default function Home() {
     canvasRef.current.innerHTML = "";
     canvasRef.current.appendChild(renderer.domElement);
 
-    // Add lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    // Add lighting - adjust based on theme
+    const ambientLight = new THREE.AmbientLight(0xffffff, isDarkTheme ? 0.6 : 0.8);
     scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, isDarkTheme ? 0.8 : 1);
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
-    // Add a faint grid outline
-    const gridHelper = new THREE.GridHelper(10, 10, 0x888888, 0x444444);
+    // Add a faint grid outline - adjust color based on theme
+    const gridColor = isDarkTheme ? 0x555555 : 0x888888;
+    const gridSubColor = isDarkTheme ? 0x333333 : 0x444444;
+    const gridHelper = new THREE.GridHelper(10, 10, gridColor, gridSubColor);
     gridHelper.position.y = -0.5;
     scene.add(gridHelper);
 
@@ -139,7 +145,7 @@ export default function Home() {
       dragControls.dispose();
       renderer.dispose();
     };
-  }, []);
+  }, [isDarkTheme]); // Re-run when theme changes
 
   const features = [
     {
@@ -170,22 +176,27 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-muted/20">
+      
       <main className="flex-1">
         {/* Hero Section */}
         <section
           className="relative py-32 md:py-40 overflow-hidden bg-cover bg-center"
           style={{
             backgroundImage:
-              "linear-gradient(135deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(225deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(315deg, rgba(255,255,255,0.05) 25%, transparent 25%)",
+              `linear-gradient(135deg, var(--hero-pattern-color, rgba(255,255,255,0.05)) 25%, transparent 25%), 
+               linear-gradient(225deg, var(--hero-pattern-color, rgba(255,255,255,0.05)) 25%, transparent 25%), 
+               linear-gradient(45deg, var(--hero-pattern-color, rgba(255,255,255,0.05)) 25%, transparent 25%), 
+               linear-gradient(315deg, var(--hero-pattern-color, rgba(255,255,255,0.05)) 25%, transparent 25%)`,
             backgroundSize: "40px 40px",
-          }}
+            "--hero-pattern-color": isDarkTheme ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+          } as React.CSSProperties}
         >
-          <div className="absolute inset-0 bg-black/30" />
+          <div className={`absolute inset-0 ${isDarkTheme ? 'bg-black/30' : 'bg-white/30'}`} />
           <div className="container relative mx-auto px-4">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
               {/* Text content */}
               <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 animate-fadeIn">
-                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-800">
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60">
                   Your Honor. <br /> Your Wallet. <br /> Your Duck. <br />
                 </h1>
                 <p className="max-w-[42rem] text-lg text-muted-foreground sm:text-xl leading-relaxed">
@@ -194,7 +205,7 @@ export default function Home() {
                   stay on track.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                  <Link href="/signup">
+                  <Link href="/dashboard">
                     <Button
                       size="lg"
                       className="gap-2 px-8 py-6 text-lg transition-transform duration-300 hover:scale-105"
@@ -209,7 +220,7 @@ export default function Home() {
               <div className="flex-1 hidden md:block relative animate-slideIn">
                 <div
                   ref={canvasRef}
-                  className="w-full h-[500px] rounded-lg shadow-2xl overflow-hidden"
+                  className="w-full h-[500px] rounded-lg overflow-hidden border border-border/30"
                 />
               </div>
             </div>
@@ -240,7 +251,7 @@ export default function Home() {
                         rx="10"
                         ry="10"
                         fill="none"
-                        stroke="rgba(255,255,255,0.8)"
+                        stroke="var(--border-highlight, rgba(255,255,255,0.8))"
                         strokeWidth="2"
                         pathLength="1"
                         strokeDasharray="0.1 0.9"

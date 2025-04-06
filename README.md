@@ -1,6 +1,6 @@
 # Waddl: The Ultimate Productivity App 🦆
 
-Waddl is a real-time productivity computer vision web app with a twist—a virtual duck companion that holds you accountable. It's not just a reminder to focus; it **DEMANDS** you meet your goals, blending fun, accountability, and a little bit of chaos into your daily routine.
+Waddl is a real-time productivity computer vision web app with a twist—a virtual duck companion that holds you accountable (and may take your money!). It's not just a reminder to focus; it **DEMANDS** you meet your goals, blending fun, accountability, and a little bit of chaos into your daily routine.
 
 ## Inspiration
 
@@ -10,7 +10,7 @@ We set out to build an app that goes beyond the typical productivity reminder. D
 
 - **Real-Time Productivity**: Monitor your progress through computer vision and an extension, built around a dynamic web app.
 - **Virtual Duck Companion**: Bond with a cute duck via your webcam (and give it a thumbs up/wave, trust us!). If you slack off and miss your goals, **the duck dies**.
-- **Shared Experience**: Raise a duck with friends and hold each other accountable.
+- **Shared Experience**: Raise a duck with friends and even invest money in it. Hold each other accountable.
 - **Motivational Roasts**: Get encouraging—and sometimes brutally honest—roasts powered by Gemini AI (in front of everyone).
 
 ## How We Built It
@@ -23,6 +23,8 @@ Our tech stack and tools helped us bring Waddl to life:
   - MongoDB & Auth0 for a secure backend and user management.
 - **Browser Monitoring**:
   - Chrome Extension API to track your activity in real time.
+- **Financial Integration**:
+  - Real money betting for real goal commitments with Stripe.
 - **Computer Vision**:
   - OpenCV, MediaPipe, DeepFace for face, gaze, and gesture tracking along with emotion analysis.
 - **Communication**:
@@ -39,12 +41,12 @@ Follow these steps to clone and run the project locally:
    ```bash
    git clone https://github.com/yourusername/waddl.git
    ```
-2. **Navigate to the Project Directory**
-   Change your working directory to the project folder:
+2. **Navigate to the Client Directory**
+   Change your working directory to the client folder:
    ```bash
-   cd waddl
+   cd waddl/client
    ```
-3. **Install Dependencies**
+3. **Install Client Dependencies**
    If you're using npm:
    ```bash
    npm install
@@ -62,6 +64,35 @@ Follow these steps to clone and run the project locally:
    ```bash
    yarn dev
    ```
+
+5. **Navigate to the Server directory**
+   Change your working directory to server:
+   ```bash
+   cd ../server
+   ```
+
+6. **Create a Venv and Activate It***
+   ```bash
+   py venv venv
+   venv/Scripts/activate
+   ```
+
+6. **Install Computer Vision Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+7. **Navigate to Vision Folder**
+   ```bash
+   cd vision
+   ```
+
+8. **Run the Computer Vision**
+   ```bash
+   py app.py
+   ```
+   
+   
    Visit http://localhost:3000 in your browser to see the app in action.
 
 ## Challenges We Faced

@@ -86,7 +86,7 @@ export default function PetWidget({ groupId }: PetWidgetProps) {
   }
 
   return (
-    <div className="rounded-lg shadow-md p-4 w-full max-w-xs">
+    <div className="rounded-lg p-4 w-full max-w-xs">
       
       <div className="relative h-40 w-full mb-4">
         <Image

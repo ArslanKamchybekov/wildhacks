@@ -2,7 +2,7 @@
 // This file ensures there's no conflict with the content-script.js file
 // It simply forwards messages without creating duplicate variables
 
-console.log('GoalKeeper Extension content.js loaded');
+console.log('Waddl Extension content.js loaded');
 
 // Listen for messages from the background script and forward them to content-script.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
