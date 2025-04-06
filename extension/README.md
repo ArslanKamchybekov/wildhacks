@@ -1,12 +1,12 @@
-# GoalKeeper Pet Browser Extension
+# Waddl Pet Browser Extension
 
-This browser extension works alongside the GoalKeeper web application to help you stay focused on your goals. It monitors your browsing habits and affects your virtual pet's health based on how productive your browsing is.
+This browser extension works alongside the Waddl web application to help you stay focused on your goals. It monitors your browsing habits and affects your virtual pet's health based on how productive your browsing is.
 
 ## Features
 
 - **Pet Health Monitoring**: Your virtual pet loses health when you visit sites that distract from your goals
 - **Real-time Feedback**: Get notifications about whether the current site is helping or hurting your productivity
-- **Goal Integration**: Connects with your goals from the GoalKeeper web app
+- **Goal Integration**: Connects with your goals from the Waddl web app
 - **Visual Pet Status**: See your pet's health and mood change based on your browsing habits
 
 ## Installation
@@ -28,7 +28,7 @@ This browser extension works alongside the GoalKeeper web application to help yo
 ## Usage
 
 1. Click the extension icon in your browser toolbar to open the popup
-2. Log in with your GoalKeeper account
+2. Log in with your Waddl account
 3. Your pet will now monitor your browsing and provide feedback
 4. The pet will appear in the bottom-right corner of your browser window
 5. When you visit unproductive sites, your pet will lose health
@@ -59,7 +59,7 @@ extension/
 
 ## API Integration
 
-The extension communicates with the GoalKeeper API to:
+The extension communicates with the Waddl API to:
 - Authenticate users
 - Retrieve user goals
 - Check URL productivity
@@ -67,4 +67,4 @@ The extension communicates with the GoalKeeper API to:
 
 ## Privacy
 
-This extension only tracks the URLs you visit to determine if they align with your goals. This data is only used locally and to update your pet's health in the GoalKeeper application. No browsing history is stored or shared with third parties.
+This extension only tracks the URLs you visit to determine if they align with your goals. This data is only used locally and to update your pet's health in the Waddl application. No browsing history is stored or shared with third parties.
