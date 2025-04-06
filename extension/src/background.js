@@ -1,6 +1,7 @@
 // background.js - Handles logic for personal pet CV interaction
 
 const LOCAL_CV_SERVER = 'http://localhost:8000/api/state';
+const SERVER_API_ENDPOINT = 'http://localhost:3000/api/cv-event';
 const DUCK_GIFS = {
   IDLE: 'duckidle.gif',
   HAPPY: 'duckhappy.gif',
@@ -30,6 +31,87 @@ let isDeathAnimationPlaying = false;
 const DEBUG = true;
 function log(...args) {
   if (DEBUG) console.log(...args);
+}
+
+// Variables for URL tracking
+let lastProcessedUrl = '';
+let lastUrlCheckTime = 0;
+const URL_CHECK_COOLDOWN = 5000; // 5 seconds between URL checks
+
+// Check active tab URL and send to server if it changed
+function checkCurrentUrl() {
+  // Don't check URLs too frequently
+  const now = Date.now();
+  if (now - lastUrlCheckTime < URL_CHECK_COOLDOWN) {
+    return;
+  }
+  
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    if (tabs.length === 0) return;
+    
+    const currentUrl = tabs[0].url;
+    
+    // Skip internal browser pages and localhost URLs
+    if (!currentUrl || 
+        currentUrl.startsWith('chrome://') ||
+        currentUrl.startsWith('chrome-extension://') ||
+        currentUrl.startsWith('about:') ||
+        currentUrl.startsWith('file://') ||
+        currentUrl.includes('localhost')) {
+      log('Skipping internal or localhost URL:', currentUrl);
+      return;
+    }
+    
+    // Skip if URL hasn't changed
+    if (currentUrl === lastProcessedUrl) {
+      return;
+    }
+    
+    // Update tracking variables
+    lastProcessedUrl = currentUrl;
+    lastUrlCheckTime = now;
+    
+    // Get user email from storage
+    chrome.storage.local.get(['userEmail'], function(result) {
+      const userEmail = result.userEmail;
+      
+      if (!userEmail) {
+        log('No user email found, skipping API call');
+        return;
+      }
+      
+      // Prepare data to send to server
+      const payload = {
+        emotion: 'not_detected',
+        focus: 'not_detected',
+        thumbs_up: 'not_detected',
+        wave: 'not_detected',
+        timestamp: new Date().toISOString(),
+        user_email: userEmail,
+        current_tab_url: currentUrl
+      };
+      
+      log('Sending URL change data to server:', payload);
+      
+      // Send data to server
+      fetch(SERVER_API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => {
+        if (response.ok) {
+          log('URL change data sent successfully');
+          return response.json();
+        }
+        throw new Error('Failed to send URL change data');
+      })
+      .then(data => log('Server response:', data))
+      .catch(error => log('Error sending URL change data:', error));
+    });
+  });
 }
 
 function pollCvData() {
@@ -201,7 +283,30 @@ function startCvPolling() {
   log("Starting CV polling");
   setInterval(pollCvData, 300); // Reduce from 100ms to 300ms - still responsive but less CPU usage
   pollCvData();
+  
+  // Also start URL change monitoring
+  log("Starting URL change monitoring");
+  setInterval(checkCurrentUrl, 1000); // Check for URL changes every second
+  checkCurrentUrl();
 }
+
+// Listen for tab updates to detect URL changes
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete') {
+    // A tab has completely loaded, check if it's the active tab
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+      if (tabs.length > 0 && tabs[0].id === tabId) {
+        checkCurrentUrl();
+      }
+    });
+  }
+});
+
+// Listen for tab activation changes
+chrome.tabs.onActivated.addListener(activeInfo => {
+  // User switched to a different tab, check its URL
+  checkCurrentUrl();
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   log("Background received message:", message);

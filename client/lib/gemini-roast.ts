@@ -10,17 +10,6 @@ type UserData = {
   tickData: any[];
 };
 
-/**
- * Generate a roast for a specific user based on their behavior
- * @param userName The name of the user to roast
- * @param focus The focus state detected (e.g., 'focused', 'distracted')
- * @param emotion The emotion detected (e.g., 'happy', 'sad', 'neutral')
- * @param userTicks Array of previous observations about the user
- * @param currentUrl Current URL the user is browsing
- * @param alignmentReason Reason for alignment/misalignment with goals
- * @param sessionGoal The active session goal content
- * @returns A personalized roast message
- */
 export async function generateRoastForUser(
   userName: string,
   focus: string,
@@ -33,23 +22,28 @@ export async function generateRoastForUser(
   try {
     // Initialize the model
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    
+
     // Format the user's previous tick data if available
     let tickContext = "";
     if (userTicks && userTicks.length > 0) {
-      const ticksFormatted = userTicks.map(
-        (tick) => `- ${tick.content} (observed on ${new Date(tick.timestamp).toLocaleDateString()})`
-      ).join("\n");
-      
+      const ticksFormatted = userTicks
+        .map(
+          (tick) =>
+            `- ${tick.content} (observed on ${new Date(
+              tick.timestamp
+            ).toLocaleDateString()})`
+        )
+        .join("\n");
+
       tickContext = `\n\nPrevious observations about ${userName}:\n${ticksFormatted}`;
     }
-    
+
     // Create a prompt that focuses specifically on generating a roast
     // Determine if this is CV-only data or browser extension data
     const isCvOnlyData = !currentUrl;
-    
+
     // Create context based on data source
-    let contextInfo = '';
+    let contextInfo = "";
     if (isCvOnlyData) {
       // For CV-only data, focus on physical behavior
       contextInfo = `The computer vision system detected that their focus is "${focus}" and their emotion is "${emotion}".`;
@@ -57,29 +51,36 @@ export async function generateRoastForUser(
       // For browser extension data, include URL and alignment reason
       contextInfo = `The computer vision system detected that their focus is "${focus}" and their emotion is "${emotion}".
 They are currently browsing: ${currentUrl}`;
-      
+
       // Add alignment reason if available
       if (alignmentReason) {
         contextInfo += `\nReason this is distracting: ${alignmentReason}`;
       }
     }
-    
+
     // Add session goal if available
     if (sessionGoal) {
       contextInfo += `\nTheir current study goal is: ${sessionGoal}`;
     }
-    
+
     const prompt = `Generate a funny, light-hearted roast for ${userName} who is studying.
 ${contextInfo}
 ${tickContext}
 
 Create a playful and motivational roast that:
 1. References their current focus (${focus}) and emotion (${emotion})
-2. ${!isCvOnlyData ? 'Mentions the website they are visiting if appropriate' : 'Focuses on their physical behavior'}
+2. ${
+      !isCvOnlyData
+        ? "Mentions the website they are visiting if appropriate"
+        : "Focuses on their physical behavior"
+    }
 3. Is humorous but not mean-spirited
-4. Encourages them to stay focused on their studies${sessionGoal ? ' and their specific goal' : ''}
-5. Is 1-2 sentences maximum
+4. Encourages them to stay focused on their studies${
+      sessionGoal ? " and their specific goal" : ""
+    }
+5. Is 1 sentence maximum
 6. Has a clever or witty tone
+7. No unnatural language like the underscore (_), hypen(-), etc. Talk like a real person.
 
 The roast should be personalized to ${userName} and their current state.`;
 
@@ -88,6 +89,8 @@ The roast should be personalized to ${userName} and their current state.`;
     return result.response.text();
   } catch (error) {
     console.error("Error generating roast from Gemini:", error);
-    return `Hey ${userName}, I noticed you got distracted. Let's get back to focusing${sessionGoal ? ' on ' + sessionGoal : ''}!`;
+    return `Hey ${userName}, I noticed you got distracted. Let's get back to focusing${
+      sessionGoal ? " on " + sessionGoal : ""
+    }!`;
   }
 }
