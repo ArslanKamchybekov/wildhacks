@@ -10,17 +10,6 @@ type UserData = {
   tickData: any[];
 };
 
-/**
- * Generate a roast for a specific user based on their behavior
- * @param userName The name of the user to roast
- * @param focus The focus state detected (e.g., 'focused', 'distracted')
- * @param emotion The emotion detected (e.g., 'happy', 'sad', 'neutral')
- * @param userTicks Array of previous observations about the user
- * @param currentUrl Current URL the user is browsing
- * @param alignmentReason Reason for alignment/misalignment with goals
- * @param sessionGoal The active session goal content
- * @returns A personalized roast message
- */
 export async function generateRoastForUser(
   userName: string,
   focus: string,

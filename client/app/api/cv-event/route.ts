@@ -3,9 +3,10 @@ import { generateRoast } from '@/app/actions/cv-event';
 import { getCurrentActiveSession } from '@/app/actions/session';
 import { getUserByEmail } from '@/app/actions/user';
 import { getSession } from '@auth0/nextjs-auth0';
-import { createSystemMessage } from '@/app/actions/message';
+import { batchSendEmails, createSystemMessage, sendEmail } from '@/app/actions/message';
 import Group from '@/models/group.model';
 import { getPetByGroupId, decreasePetHealth, increasePetHealth } from '@/app/actions/pet';
+import UserConnection from '@/models/user-connection.model';
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,6 +62,8 @@ export async function POST(req: NextRequest) {
     try {
       // Find all groups
       const allGroups = await Group.find({});
+      const allConnections = await UserConnection.find({ userId: dbUser._id });
+      console.log('All connections:', allConnections);
       let groupData = null;
       
       // Find the user's group
@@ -82,6 +85,11 @@ export async function POST(req: NextRequest) {
         if (messageToSend) {
           console.log('Sending message to group chat:', messageToSend);
           await createSystemMessage(groupData._id.toString(), messageToSend);
+          if(allConnections.length === 1) {
+            await sendEmail(messageToSend, allConnections[0].email);
+          } else {
+            await batchSendEmails(messageToSend, allConnections.map(conn => conn.email));
+          }
           console.log('Message sent to group chat:', messageToSend);
         }
         

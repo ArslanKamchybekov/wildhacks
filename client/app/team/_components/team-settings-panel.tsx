@@ -60,9 +60,9 @@ export function TeamSettingsPanel({ selectedGroup, currentUserEmail, refreshGrou
 
       <Card className="lg:col-span-2">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Member Observations</CardTitle>
+          <CardTitle className="text-lg">Member Ticks</CardTitle>
           <CardDescription>
-            Add observations about team members to help Gemini generate more personalized roasts
+            Add ticks about team members to help Gemini generate more personalized roasts
           </CardDescription>
         </CardHeader>
         <CardContent>

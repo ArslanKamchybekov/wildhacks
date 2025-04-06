@@ -66,12 +66,12 @@ export function AddTickDialog({ groupId, currentUserEmail, groupMembers, onTickA
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1">
           <PlusCircle className="h-4 w-4" />
-          Add Observation
+          Add Tick
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Group Member Observation</DialogTitle>
+          <DialogTitle>Add Group Member Tick</DialogTitle>
           <DialogDescription>
             Add an observation about a group member. These observations help Gemini understand the group dynamics and provide more personalized responses.
           </DialogDescription>
@@ -116,7 +116,7 @@ export function AddTickDialog({ groupId, currentUserEmail, groupMembers, onTickA
         </div>
         <DialogFooter>
           <Button type="submit" onClick={handleSubmit} disabled={isSubmitting || !selectedUser || !tickContent.trim()}>
-            {isSubmitting ? "Adding..." : "Add Observation"}
+            {isSubmitting ? "Adding..." : "Add Tick"}
           </Button>
         </DialogFooter>
       </DialogContent>

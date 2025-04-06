@@ -169,34 +169,14 @@ export default function TeamPage() {
         <div className="grid grid-cols-12 gap-6">
           {/* Team Pet Widget */}
           <div className="col-span-12 md:col-span-4 lg:col-span-3">
-            <Card className="overflow-hidden h-full">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-rose-500" />
-                  Team Pet
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex justify-center pb-6">
-                <div className="w-full flex justify-center items-center">
-                  <PetWidget groupId={selectedGroupId} />
-                </div>
-              </CardContent>
-            </Card>
+            <div className="w-full flex justify-center items-center">
+              <PetWidget groupId={selectedGroupId} />
+            </div>
           </div>
           
           {/* Chat Interface - Side by side with pet */}
           <div className="col-span-12 md:col-span-8 lg:col-span-9">
-            <Card className="h-full">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-blue-500" />
-                  Team Chat
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChatInterface groupId={selectedGroupId} userId={dbUser?._id} />
-              </CardContent>
-            </Card>
+            <ChatInterface groupId={selectedGroupId} userId={dbUser?._id} />
           </div>
         </div>
       </div>
