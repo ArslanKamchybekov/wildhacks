@@ -5,6 +5,7 @@ import { getUserByEmail } from '@/app/actions/user';
 import { getSession } from '@auth0/nextjs-auth0';
 import { createSystemMessage } from '@/app/actions/message';
 import Group from '@/models/group.model';
+import { getPetByGroupId, decreasePetHealth, increasePetHealth } from '@/app/actions/pet';
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // Find the user's group to send the message to the group chat
+    // Find the user's group to send the message to the group chat and update pet health
     try {
       // Find all groups
       const allGroups = await Group.find({});
@@ -75,16 +76,32 @@ export async function POST(req: NextRequest) {
         }
       }
       
-      console.log('Group data:', groupData);
-      console.log('Message to send:', messageToSend);
-      // If a group is found, send the message as a system message
-      if (groupData && messageToSend) {
-        console.log('Sending message to group chat:', messageToSend);
-        await createSystemMessage(groupData._id.toString(), messageToSend);
-        console.log('Message sent to group chat:', messageToSend);
+      // If a group is found
+      if (groupData) {
+        // 1. Send the message to the group chat
+        if (messageToSend) {
+          console.log('Sending message to group chat:', messageToSend);
+          await createSystemMessage(groupData._id.toString(), messageToSend);
+          console.log('Message sent to group chat:', messageToSend);
+        }
+        
+        // 2. Update the group pet's health (only based on focus)
+        const groupPet = await getPetByGroupId(groupData._id.toString());
+        if (groupPet) {
+          // For group pet: only focus affects health, and at a slower rate than personal pet
+          if (focus === 'distracted') {
+            // Decrease group pet health at a slower rate (5 points)
+            await decreasePetHealth(groupPet._id as string, 5);
+            console.log('Group pet health decreased by 5 due to distraction');
+          } else if (focus === 'focused') {
+            // Increase group pet health at a slower rate (2 points)
+            await increasePetHealth(groupPet._id as string, 2);
+            console.log('Group pet health increased by 2 due to focus');
+          }
+        }
       }
     } catch (error) {
-      console.error('Error sending message to group chat:', error);
+      console.error('Error processing group data:', error);
     }
     
     // Return the response with roast and URL alignment status

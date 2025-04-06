@@ -191,29 +191,94 @@ async function getUserEmail() {
   });
 }
 
-// Function to update duck GIF based on CV data
+// Pet health state (starts at 100)
+let petHealth = 100;
+const HEALTH_UPDATE_INTERVAL = 10000; // 10 seconds
+let lastHealthUpdate = Date.now();
+
+// Function to update pet health based on CV data
+function updatePetHealth(data) {
+  const now = Date.now();
+  if (now - lastHealthUpdate < HEALTH_UPDATE_INTERVAL) return;
+  lastHealthUpdate = now;
+  
+  // Base health changes
+  if (data.focus === 'distracted') {
+    petHealth -= 10; // Lose health when distracted
+  } else if (data.focus === 'focused') {
+    petHealth += 5; // Gain health when focused
+  }
+  
+  // Additional factors
+  if (data.emotion === 'sad' || data.emotion === 'angry') {
+    petHealth -= 5; // Negative emotions reduce health
+  } else if (data.emotion === 'happy') {
+    petHealth += 3; // Positive emotions boost health
+  }
+  
+  // Special bonuses
+  if (data.thumbs_up === 'detected') {
+    petHealth += 15; // Big boost for thumbs up
+  }
+  if (data.wave === 'detected') {
+    petHealth += 10; // Moderate boost for wave
+  }
+  
+  // Keep health within bounds
+  petHealth = Math.min(100, Math.max(0, petHealth));
+  
+  // Update pet in web pages
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    if (tabs.length > 0) {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: 'updatePet',
+        health: petHealth,
+        message: generateMessage(data, petHealth),
+        isProductive: data.focus === 'focused'
+      });
+    }
+  });
+  
+  console.log('Updated pet health:', petHealth);
+}
+
+// Generate appropriate message based on CV data and health
+function generateMessage(data, health) {
+  if (data.thumbs_up === 'detected') {
+    return 'Great job! Keep up the good work!';
+  } else if (data.wave === 'detected') {
+    return 'Hi there! Taking a break?';
+  } else if (data.focus === 'distracted') {
+    return `I notice you're distracted. Let's get back to studying!`;
+  } else if (health < 30) {
+    return 'Your pet is in critical condition! Focus on your work to help it recover.';
+  } else if (data.emotion === 'happy') {
+    return 'You look happy! That makes your pet happy too!';
+  }
+  return 'Your study buddy is watching...'; // Default message
+}
+
+// Function to update duck GIF based on CV data and health
 function updateDuckGif(data) {
+  updatePetHealth(data);
+  
   let newGif = DUCK_GIFS.IDLE; // Default
   
-  // Check for gestures first
+  // Check for gestures first (highest priority)
   if (data.wave === 'detected') {
     newGif = DUCK_GIFS.WAVE;
   } else if (data.thumbs_up === 'detected') {
     newGif = DUCK_GIFS.THUMB;
   }
-  // Then check focus and emotion
-  else if (data.focus === 'distracted') {
-    if (data.emotion === 'angry' || data.emotion === 'disgust') {
-      newGif = DUCK_GIFS.CRITICAL;
-    } else if (data.emotion === 'sad' || data.emotion === 'fear') {
-      newGif = DUCK_GIFS.DAMAGE;
-    } else {
-      newGif = DUCK_GIFS.DAMAGE; // Default for distracted
-    }
-  } else if (data.focus === 'not_detected') {
-    newGif = DUCK_GIFS.DEATH; // User not detected
-  } else if (data.emotion === 'happy' || data.emotion === 'surprise') {
-    newGif = DUCK_GIFS.HAPPY;
+  // Then check health and state
+  else if (petHealth <= 0) {
+    newGif = DUCK_GIFS.DEATH; // Dead pet
+  } else if (petHealth < 30) {
+    newGif = DUCK_GIFS.CRITICAL; // Critical health
+  } else if (petHealth < 70 || data.focus === 'distracted') {
+    newGif = DUCK_GIFS.DAMAGE; // Damaged or distracted
+  } else if (data.emotion === 'happy') {
+    newGif = DUCK_GIFS.HAPPY; // Happy emotion
   }
   
   // Only update if changed

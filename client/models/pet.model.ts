@@ -10,19 +10,22 @@ export interface IPet extends Document {
 
 // Pet GIF paths
 export const PET_GIFS = {
-  IDLE: '/pet/duckidle.gif',
-  HAPPY: '/pet/duckhappy.gif',
-  SAD: '/pet/duckdamage.gif',
-  DANCING: '/pet/duckthumb.gif',
-  SLEEPING: '/pet/duckdeath.gif'
+  IDLE: '/pet/duckidle.gif',     // For normal state
+  HAPPY: '/pet/duckhappy.gif',   // For happy/good health
+  DAMAGE: '/pet/duckdamage.gif', // For medium damage
+  CRITICAL: '/pet/duckcritical.gif', // For critical health
+  DEATH: '/pet/duckdeath.gif',   // For death/no health
+  THUMBS_UP: '/pet/duckthumb.gif', // For thumbs up gesture
+  WAVE: '/pet/duckwave.gif'      // For wave gesture
 };
 
-// Function to get appropriate pet GIF based on health
+// Function to get appropriate group pet GIF based on health
+// Group pet only uses health, not other CV data
 export const getPetGifByHealth = (health: number): string => {
-  if (health > 80) return PET_GIFS.HAPPY;
-  if (health > 50) return PET_GIFS.IDLE;
-  if (health > 30) return PET_GIFS.SLEEPING;
-  return PET_GIFS.SAD;
+  if (health <= 0) return PET_GIFS.DEATH;    // Duck death for health <= 0
+  if (health < 30) return PET_GIFS.CRITICAL;  // Duck critical for health 0-30
+  if (health < 80) return PET_GIFS.IDLE;      // Duck idle for health 30-80
+  return PET_GIFS.HAPPY;                     // Duck happy for health > 80
 };
 
 // Define the Pet schema
