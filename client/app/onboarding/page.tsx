@@ -62,7 +62,7 @@ export default function OnboardingPage() {
     <div className="container mx-auto flex items-center justify-center min-h-screen py-8 px-4">
       <Card className="w-full max-w-3xl">
         <CardHeader>
-          <CardTitle className="text-2xl">Welcome to GoalKeeper</CardTitle>
+          <CardTitle className="text-2xl">Welcome to Waddl</CardTitle>
           <CardDescription>Let's get you set up in a few quick steps</CardDescription>
           <OnboardingProgress currentStep={step} totalSteps={totalSteps} />
         </CardHeader>

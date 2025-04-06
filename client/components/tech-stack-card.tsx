@@ -158,7 +158,7 @@ export default function TechStackCard() {
           animate={isVisible ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
-          GoalKeeper combines these powerful technologies to create a seamless,
+          Waddl combines these powerful technologies to create a seamless,
           intelligent goal-tracking experience
         </motion.p>
       </div>
