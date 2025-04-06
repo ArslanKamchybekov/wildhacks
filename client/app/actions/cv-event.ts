@@ -87,8 +87,10 @@ export async function generateRoast(
     // Check if the current URL aligns with the session goal
     let shouldRoast = true;
     let alignmentReason = '';
+    let isEmptyUrl = !current_tab_url || current_tab_url === '' || current_tab_url === 'null';
     
-    if (current_tab_url && activeSession && activeSession.goal) {
+    // Skip URL alignment check if URL is empty or null (CV-only data)
+    if (!isEmptyUrl && activeSession && activeSession.goal) {
       console.log('Checking URL alignment with session goal...');
       console.log('Current URL:', current_tab_url);
       console.log('Session goal:', activeSession.goal);
@@ -127,17 +129,26 @@ export async function generateRoast(
       }
     }
     
-    // Only generate a roast if the URL doesn't align with the session goal
+    // Generate a roast based on conditions
     let roastContent = null;
-    if (shouldRoast) {
-      console.log('URL does not align with session goal. Generating roast...');
+    
+    // Always generate a roast for CV data (empty URL) or if URL doesn't align with goals
+    if (shouldRoast || isEmptyUrl) {
+      // Log appropriate message based on source
+      if (isEmptyUrl) {
+        console.log('Generating roast based on computer vision data (no URL)...');
+      } else {
+        console.log('URL does not align with session goal. Generating roast...');
+      }
+      
+      // Generate roast with appropriate context
       roastContent = await generateRoastForUser(
         user.name || user.email.split('@')[0], // Use name or first part of email
         'distracted', // Behavior description
         focus === 'distracted' ? 'looking away from the screen' : emotion, // Details based on focus/emotion
         ticks,
-        current_tab_url, // Pass the URL to the roast generator
-        alignmentReason // Pass the reason for misalignment
+        isEmptyUrl ? undefined : current_tab_url, // Only pass URL if it's valid
+        isEmptyUrl ? undefined : alignmentReason // Only pass alignment reason if URL is valid
       );
     } else {
       console.log('URL aligns with session goal. No roast needed.');

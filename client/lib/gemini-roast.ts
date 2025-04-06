@@ -41,20 +41,32 @@ export async function generateRoastForUser(
     }
     
     // Create a prompt that focuses specifically on generating a roast
-    // Include the current URL and alignment reason if available
-    let urlContext = currentUrl ? `They are currently browsing: ${currentUrl}` : '';
-    if (alignmentReason) {
-      urlContext += `\nReason this is distracting: ${alignmentReason}`;
+    // Determine if this is CV-only data or browser extension data
+    const isCvOnlyData = !currentUrl;
+    
+    // Create context based on data source
+    let contextInfo = '';
+    if (isCvOnlyData) {
+      // For CV-only data, focus on physical behavior
+      contextInfo = `The computer vision system detected that they were "${eventValue}" (event type: ${eventType}).`;
+    } else {
+      // For browser extension data, include URL and alignment reason
+      contextInfo = `The computer vision system detected that they were "${eventValue}" (event type: ${eventType}).
+They are currently browsing: ${currentUrl}`;
+      
+      // Add alignment reason if available
+      if (alignmentReason) {
+        contextInfo += `\nReason this is distracting: ${alignmentReason}`;
+      }
     }
     
     const prompt = `Generate a funny, light-hearted roast for ${userName} who is studying.
-The computer vision system detected that they were "${eventValue}" (event type: ${eventType}).
-${urlContext}
+${contextInfo}
 ${tickContext}
 
 Create a playful and motivational roast that:
 1. References their specific behavior (${eventValue})
-2. ${currentUrl ? 'Mentions the website they are visiting if appropriate' : 'Is personalized to them'}
+2. ${!isCvOnlyData ? 'Mentions the website they are visiting if appropriate' : 'Focuses on their physical behavior'}
 3. Is humorous but not mean-spirited
 4. Encourages them to stay focused on their studies
 5. Is 1-2 sentences maximum

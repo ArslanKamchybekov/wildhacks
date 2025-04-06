@@ -4,6 +4,20 @@
 // API endpoint for sending roasts
 const ROAST_ENDPOINT = 'http://localhost:3000/api/cv-event';
 
+// Duck GIF paths based on CV data
+const DUCK_GIFS = {
+  IDLE: 'duckidle.gif',
+  HAPPY: 'duckhappy.gif',
+  DAMAGE: 'duckdamage.gif',
+  CRITICAL: 'duckcritical.gif',
+  DEATH: 'duckdeath.gif',
+  THUMB: 'duckthumb.gif',
+  WAVE: 'duckwave.gif'
+};
+
+// Current duck state
+let currentDuckGif = DUCK_GIFS.IDLE;
+
 // Debug mode - set to true to see detailed logs
 const DEBUG = true;
 
@@ -146,6 +160,7 @@ async function processTabChange(url, tabId) {
       
         if (response.ok) {
           const data = await response.json();
+          updateDuckGif(data);
           debugLog('Data sent successfully:', data);
         } else {
           console.error('Failed to send data:', await response.text());
@@ -176,9 +191,54 @@ async function getUserEmail() {
   });
 }
 
+// Function to update duck GIF based on CV data
+function updateDuckGif(data) {
+  let newGif = DUCK_GIFS.IDLE; // Default
+  
+  // Check for gestures first
+  if (data.wave === 'detected') {
+    newGif = DUCK_GIFS.WAVE;
+  } else if (data.thumbs_up === 'detected') {
+    newGif = DUCK_GIFS.THUMB;
+  }
+  // Then check focus and emotion
+  else if (data.focus === 'distracted') {
+    if (data.emotion === 'angry' || data.emotion === 'disgust') {
+      newGif = DUCK_GIFS.CRITICAL;
+    } else if (data.emotion === 'sad' || data.emotion === 'fear') {
+      newGif = DUCK_GIFS.DAMAGE;
+    } else {
+      newGif = DUCK_GIFS.DAMAGE; // Default for distracted
+    }
+  } else if (data.focus === 'not_detected') {
+    newGif = DUCK_GIFS.DEATH; // User not detected
+  } else if (data.emotion === 'happy' || data.emotion === 'surprise') {
+    newGif = DUCK_GIFS.HAPPY;
+  }
+  
+  // Only update if changed
+  if (newGif !== currentDuckGif) {
+    currentDuckGif = newGif;
+    // Send message to popup to update the duck GIF
+    chrome.runtime.sendMessage({
+      action: 'updateDuckGif',
+      gifPath: chrome.runtime.getURL(`../assets/${currentDuckGif}`)
+    });
+  }
+}
+
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('Background script received message:', message);
+  
+  // Handle request for current duck GIF
+  if (message.action === 'getDuckGif') {
+    sendResponse({
+      success: true,
+      gifPath: chrome.runtime.getURL(`../assets/${currentDuckGif}`)
+    });
+    return true;
+  }
   
   if (message.action === 'login') {
     // Store user email

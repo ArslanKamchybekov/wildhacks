@@ -26,7 +26,8 @@ latest_data = {
     "thumbs_up": "not_detected",
     "wave": "not_detected",
     "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-    "user_email": "arslankamcybekov7@gmail.com"
+    "user_email": "arslankamcybekov7@gmail.com",
+    "current_tab_url": ""
 }
 
 # Detection thread function
@@ -82,7 +83,8 @@ def run_detectors():
                 "thumbs_up": "detected" if last_gesture["gesture"] == "Thumbs Up" else "not_detected",
                 "wave": "detected" if last_gesture["gesture"] == "Wave" else "not_detected",
                 "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-                "user_email": "arslankamcybekov7@gmail.com"
+                "user_email": "arslankamcybekov7@gmail.com",
+                "current_tab_url": ""
             }
             
             # Optional: Display debug window

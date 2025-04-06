@@ -11,6 +11,8 @@ const statusMessage = document.getElementById('status-message');
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
+  const duckGif = document.getElementById('duck-gif');
+  
   // Check if user is logged in
   chrome.storage.local.get(['isLoggedIn', 'userEmail'], function(result) {
     if (result.isLoggedIn && result.userEmail) {
@@ -26,6 +28,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update status message with active tab URL
         statusMessage.textContent = `Logged in as: ${result.userEmail}. Tab tracking is active. Current tab: ${activeTabUrl}`;
       });
+      
+      // Request current duck GIF from background script
+      chrome.runtime.sendMessage({ action: 'getDuckGif' }, function(response) {
+        if (response && response.success) {
+          duckGif.src = response.gifPath;
+        }
+      });
+    }
+  });
+  
+  // Listen for duck GIF updates from background script
+  chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.action === 'updateDuckGif' && duckGif) {
+      duckGif.src = message.gifPath;
     }
   });
   

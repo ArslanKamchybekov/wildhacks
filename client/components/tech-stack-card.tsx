@@ -144,7 +144,7 @@ export default function TechStackCard() {
           animate={isVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
         >
-          Powered By Cutting-Edge Tech
+          Waddl Waddl Waddl...
         </motion.h2>
         <motion.div
           className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full"

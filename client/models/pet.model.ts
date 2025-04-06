@@ -1,26 +1,29 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Pet mood types
-export type PetMood = 'happy' | 'sad' | 'angry' | 'excited' | 'sleepy' | 'neutral';
-
-// Pet image URLs for different moods
-export const PET_MOOD_IMAGES: Record<PetMood, string> = {
-  'happy': '/images/pet_happy.png',
-  'sad': '/images/pet_sad.png',
-  'angry': '/images/pet_angry.png',
-  'excited': '/images/pet_excited.png',
-  'sleepy': '/images/pet_sleepy.png',
-  'neutral': '/images/pet_neutral.png'
-};
-
 // Define the Pet interface
 export interface IPet extends Document {
   groupId: mongoose.Types.ObjectId;
   health: number;
-  mood: PetMood;
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Pet GIF paths
+export const PET_GIFS = {
+  IDLE: '/pet/duckidle.gif',
+  HAPPY: '/pet/duckhappy.gif',
+  SAD: '/pet/duckdamage.gif',
+  DANCING: '/pet/duckthumb.gif',
+  SLEEPING: '/pet/duckdeath.gif'
+};
+
+// Function to get appropriate pet GIF based on health
+export const getPetGifByHealth = (health: number): string => {
+  if (health > 80) return PET_GIFS.HAPPY;
+  if (health > 50) return PET_GIFS.IDLE;
+  if (health > 30) return PET_GIFS.SLEEPING;
+  return PET_GIFS.SAD;
+};
 
 // Define the Pet schema
 const PetSchema: Schema = new Schema({
@@ -36,11 +39,7 @@ const PetSchema: Schema = new Schema({
     max: 100,
     default: 100
   },
-  mood: {
-    type: String,
-    enum: ['happy', 'sad', 'angry', 'excited', 'sleepy', 'neutral'],
-    default: 'neutral'
-  },
+  // Mood field removed as we'll use GIFs for different pet states
   createdAt: { 
     type: Date, 
     default: Date.now 

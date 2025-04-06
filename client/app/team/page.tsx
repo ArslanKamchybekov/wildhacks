@@ -172,12 +172,6 @@ export default function TeamPage() {
           {/* Team Pet Widget */}
           <div className="md:col-span-1">
             <Card className="h-full">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-red-500" />
-                  Team Pet
-                </CardTitle>
-              </CardHeader>
               <CardContent>
                 <PetWidget groupId={selectedGroupId} />
               </CardContent>
