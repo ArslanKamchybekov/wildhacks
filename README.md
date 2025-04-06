@@ -10,7 +10,7 @@ We set out to build an app that goes beyond the typical productivity reminder. D
 
 - **Real-Time Productivity**: Monitor your progress through computer vision and an extension, built around a dynamic web app.
 - **Virtual Duck Companion**: Bond with a cute duck via your webcam (and give it a thumbs up/wave, trust us!). If you slack off and miss your goals, **the duck dies**.
-- **Shared Experience**: Raise a duck with friends and hold each other accountable.
+- **Shared Experience**: Raise a duck with friends and even invest money in it. Hold each other accountable.
 - **Motivational Roasts**: Get encouraging—and sometimes brutally honest—roasts powered by Gemini AI (in front of everyone).
 
 ## How We Built It
@@ -23,6 +23,8 @@ Our tech stack and tools helped us bring Waddl to life:
   - MongoDB & Auth0 for a secure backend and user management.
 - **Browser Monitoring**:
   - Chrome Extension API to track your activity in real time.
+- **Financial Integration**:
+  - Real money betting for real goal commitments.
 - **Computer Vision**:
   - OpenCV, MediaPipe, DeepFace for face, gaze, and gesture tracking along with emotion analysis.
 - **Communication**:
