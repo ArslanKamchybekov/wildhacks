@@ -49,6 +49,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
   const [newMessage, setNewMessage] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
+  const [isGeminiLoading, setIsGeminiLoading] = useState(false)
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
   const [groupTicks, setGroupTicks] = useState<{[userEmail: string]: Tick[]}>({})
   const [groupName, setGroupName] = useState("")
@@ -180,7 +181,10 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
   }
   
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // Scroll only within the chat component
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
   }
   
   const sendMessage = async () => {
@@ -271,6 +275,7 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
   }
 
   async function sendGeminiResponse(userMessage: string) {
+    setIsGeminiLoading(true)
     try {
       // Get the current group to check roast level
       const group = await getGroupById(groupId);
@@ -325,6 +330,8 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
       // Send a fallback message if there's an error
       await createSystemMessage(groupId, "I'm sorry, I encountered an error while processing your request. Please try again later.")
       await fetchNewMessages()
+    } finally {
+      setIsGeminiLoading(false)
     }
   }
   
@@ -337,12 +344,12 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
 
   
   return (
-    <div className="flex flex-col h-[600px] border rounded-lg overflow-hidden">
+    <div className="flex flex-col h-[500px] border rounded-lg">
       <div className="p-4 border-b bg-muted/30">
         <h2 className="font-semibold">{groupName || "Chat"}</h2>
       </div>
       
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4" style={{ height: '420px', overflow: 'auto' }}>
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -411,6 +418,28 @@ export function ChatInterface({ groupId, userId }: ChatInterfaceProps) {
                 )}
               </div>
             ))}
+            {/* Gemini loading indicator */}
+            {isGeminiLoading && (
+              <div className="flex items-start gap-3 animate-pulse">
+                <Avatar>
+                  <AvatarImage src="/gemini.png" alt="Gemini" />
+                  <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Gemini Assistant</span>
+                    <span className="text-xs text-muted-foreground">typing...</span>
+                  </div>
+                  <div className="mt-1 rounded-lg p-3 bg-accent text-accent-foreground">
+                    <div className="flex space-x-2 items-center">
+                      <div className="h-2 w-2 rounded-full bg-current animate-bounce"></div>
+                      <div className="h-2 w-2 rounded-full bg-current animate-bounce delay-75"></div>
+                      <div className="h-2 w-2 rounded-full bg-current animate-bounce delay-150"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         )}

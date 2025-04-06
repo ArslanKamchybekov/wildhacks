@@ -2,6 +2,7 @@
 
 import { Users } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DashboardHeader } from "@/components/dashboard-header"
 
 interface Group {
   id: string
@@ -19,7 +20,10 @@ interface TeamHeaderProps {
 export function TeamHeader({ title, groups, selectedGroupId, onGroupChange }: TeamHeaderProps) {
   return (
     <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <DashboardHeader 
+        heading={title} 
+        text="Manage your team and pet"
+      />
       {groups.length > 0 && (
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4" />

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { updateUser } from "@/app/actions/user"
+import { DashboardHeader } from "@/components/dashboard-header"
 
 export default function SettingsPage() {
   const { dbUser, auth0User, isLoading } = useCurrentUser()
@@ -79,12 +80,10 @@ export default function SettingsPage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-medium">Profile Settings</h3>
-          <p className="text-sm text-muted-foreground">
-            Update your account settings and profile information.
-          </p>
-        </div>
+        <DashboardHeader 
+          heading="Profile Settings" 
+          text="Update your account settings and profile information"
+        />
         
         <form onSubmit={handleSubmit}>
           <Card>
@@ -135,80 +134,6 @@ export default function SettingsPage() {
               Information about your account.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Account Created</p>
-              <p className="text-sm text-muted-foreground">
-                {dbUser.createdAt ? new Date(dbUser.createdAt).toLocaleDateString() : "N/A"}
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Last Updated</p>
-              <p className="text-sm text-muted-foreground">
-                {dbUser.updatedAt ? new Date(dbUser.updatedAt).toLocaleDateString() : "N/A"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Browser Extension</CardTitle>
-            <CardDescription>
-              Connect your browser extension to track productivity and get roasts.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm">Connect your GoalKeeper browser extension to track your productivity and receive roasts when you get distracted.</p>
-              <Button 
-                onClick={() => {
-                  // Generate a connection token (user ID + timestamp + simple hash)
-                  const token = `${dbUser._id}-${Date.now()}-${auth0User.email?.split('@')[0] || 'user'}`;
-                  
-                  // Create connection data
-                  const connectionData = {
-                    token,
-                    userId: dbUser._id,
-                    userEmail: auth0User.email,
-                    userName: name || auth0User.name || 'User',
-                    timestamp: Date.now()
-                  };
-                  
-                  // Store connection data in localStorage for the extension to access
-                  console.log('Connection data:', connectionData);
-                  localStorage.setItem('goalkeeper_extension_data', JSON.stringify(connectionData));
-                  
-                  // Create a more visible debug element
-                  const debugDiv = document.createElement('div');
-                  debugDiv.style.position = 'fixed';
-                  debugDiv.style.bottom = '10px';
-                  debugDiv.style.right = '10px';
-                  debugDiv.style.padding = '10px';
-                  debugDiv.style.background = 'rgba(0,0,0,0.7)';
-                  debugDiv.style.color = 'white';
-                  debugDiv.style.zIndex = '9999';
-                  debugDiv.style.borderRadius = '5px';
-                  debugDiv.textContent = 'Extension data ready! Check localStorage for: goalkeeper_extension_data';
-                  document.body.appendChild(debugDiv);
-                  
-                  // Notify extension that data is available - use a more specific event
-                  window.dispatchEvent(new CustomEvent('GOALKEEPER_CONNECT_EVENT', { detail: connectionData }));
-                  window.postMessage({ type: 'GOALKEEPER_CONNECT', data: connectionData }, '*');
-                  
-                  toast.success("Ready to connect! Now click 'Connect' in your browser extension.");
-                }}
-              >
-                Generate Connection
-              </Button>
-            </div>
-            <div className="mt-4 p-3 bg-muted rounded-md">
-              <p className="text-xs text-muted-foreground">
-                After clicking the button above, open your GoalKeeper extension and click "Connect" to link your account.
-                The connection will expire after 5 minutes for security reasons.
-              </p>
-            </div>
-          </CardContent>
         </Card>
       </div>
     </DashboardShell>

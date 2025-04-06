@@ -86,10 +86,7 @@ export default function PetWidget({ groupId }: PetWidgetProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 w-full max-w-xs">
-      <div className="text-center mb-2">
-        <h3 className="text-lg font-semibold">Team Pet</h3>
-      </div>
+    <div className="rounded-lg shadow-md p-4 w-full max-w-xs">
       
       <div className="relative h-40 w-full mb-4">
         <Image

@@ -13,18 +13,22 @@ type UserData = {
 /**
  * Generate a roast for a specific user based on their behavior
  * @param userName The name of the user to roast
- * @param eventType The type of event that triggered the roast (e.g., 'eye_movement')
- * @param eventValue The specific behavior detected (e.g., 'looking_away')
+ * @param focus The focus state detected (e.g., 'focused', 'distracted')
+ * @param emotion The emotion detected (e.g., 'happy', 'sad', 'neutral')
  * @param userTicks Array of previous observations about the user
+ * @param currentUrl Current URL the user is browsing
+ * @param alignmentReason Reason for alignment/misalignment with goals
+ * @param sessionGoal The active session goal content
  * @returns A personalized roast message
  */
 export async function generateRoastForUser(
   userName: string,
-  eventType: string,
-  eventValue: string,
+  focus: string,
+  emotion: string,
   userTicks: any[] = [],
   currentUrl?: string,
-  alignmentReason?: string
+  alignmentReason?: string,
+  sessionGoal?: string
 ): Promise<string> {
   try {
     // Initialize the model
@@ -48,10 +52,10 @@ export async function generateRoastForUser(
     let contextInfo = '';
     if (isCvOnlyData) {
       // For CV-only data, focus on physical behavior
-      contextInfo = `The computer vision system detected that they were "${eventValue}" (event type: ${eventType}).`;
+      contextInfo = `The computer vision system detected that their focus is "${focus}" and their emotion is "${emotion}".`;
     } else {
       // For browser extension data, include URL and alignment reason
-      contextInfo = `The computer vision system detected that they were "${eventValue}" (event type: ${eventType}).
+      contextInfo = `The computer vision system detected that their focus is "${focus}" and their emotion is "${emotion}".
 They are currently browsing: ${currentUrl}`;
       
       // Add alignment reason if available
@@ -60,25 +64,30 @@ They are currently browsing: ${currentUrl}`;
       }
     }
     
+    // Add session goal if available
+    if (sessionGoal) {
+      contextInfo += `\nTheir current study goal is: ${sessionGoal}`;
+    }
+    
     const prompt = `Generate a funny, light-hearted roast for ${userName} who is studying.
 ${contextInfo}
 ${tickContext}
 
 Create a playful and motivational roast that:
-1. References their specific behavior (${eventValue})
+1. References their current focus (${focus}) and emotion (${emotion})
 2. ${!isCvOnlyData ? 'Mentions the website they are visiting if appropriate' : 'Focuses on their physical behavior'}
 3. Is humorous but not mean-spirited
-4. Encourages them to stay focused on their studies
+4. Encourages them to stay focused on their studies${sessionGoal ? ' and their specific goal' : ''}
 5. Is 1-2 sentences maximum
 6. Has a clever or witty tone
 
-The roast should be personalized to ${userName} and their specific behavior.`;
+The roast should be personalized to ${userName} and their current state.`;
 
     // Generate the roast
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (error) {
     console.error("Error generating roast from Gemini:", error);
-    return `Hey ${userName}, I noticed you got distracted. Let's get back to focusing!`;
+    return `Hey ${userName}, I noticed you got distracted. Let's get back to focusing${sessionGoal ? ' on ' + sessionGoal : ''}!`;
   }
 }

@@ -7,12 +7,11 @@ import { DashboardShell } from "@/components/dashboard-shell"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Clock, Target, Play, Loader2 } from "lucide-react"
+import { Play, Loader2 } from "lucide-react"
 import { createSession, getActiveSessionsByUserId } from "@/app/actions/session"
 import { getGroupsByMember } from "@/app/actions/group"
 
@@ -118,8 +117,8 @@ export default function SessionPage() {
   return (
     <DashboardShell>
       <DashboardHeader 
-        heading="Study Session" 
-        text="Create a focused study session with a specific goal and time allocation"
+        heading="Goal Sessions" 
+        text="Create a focused goal session with a specific goal and time allocation"
       />
       
       <div className="grid gap-6">

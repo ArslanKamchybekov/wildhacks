@@ -131,7 +131,6 @@ export default function TeamPage() {
     }
   }
 
-  const toggleSettings = () => setShowSettings(!showSettings)
 
   // Render appropriate content based on state
   const renderContent = () => {
@@ -148,42 +147,49 @@ export default function TeamPage() {
     }
 
     return (
-      <div className="space-y-4">
-        {/* Team Settings Toggle */}
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" className="flex items-center gap-1" onClick={toggleSettings}>
-            <Settings className="h-4 w-4" />
-            <span>Team Settings</span>
-            {showSettings ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        {/* Team Settings Panel */}
-        {showSettings && (
-          <TeamSettingsPanel
-            selectedGroup={selectedGroup}
-            currentUserEmail={user?.email || ""}
-            refreshGroupData={refreshGroupData}
-          />
-        )}
-
-        {/* Main Team Interface */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="space-y-6">
+        {/* Team Settings Panel - Top level */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Team Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TeamSettingsPanel
+              selectedGroup={selectedGroup}
+              currentUserEmail={user?.email || ""}
+              refreshGroupData={refreshGroupData}
+            />
+          </CardContent>
+        </Card>
+        
+        {/* Pet Widget and Chat side by side */}
+        <div className="grid grid-cols-12 gap-6">
           {/* Team Pet Widget */}
-          <div className="md:col-span-1">
-            <Card className="h-full">
-              <CardContent>
-                <PetWidget groupId={selectedGroupId} />
+          <div className="col-span-12 md:col-span-4 lg:col-span-3">
+            <Card className="overflow-hidden h-full">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-rose-500" />
+                  Team Pet
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex justify-center pb-6">
+                <div className="w-full flex justify-center items-center">
+                  <PetWidget groupId={selectedGroupId} />
+                </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* Chat Interface */}
-          <div className="md:col-span-3">
+          
+          {/* Chat Interface - Side by side with pet */}
+          <div className="col-span-12 md:col-span-8 lg:col-span-9">
             <Card className="h-full">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
+                  <MessageCircle className="h-5 w-5 text-blue-500" />
                   Team Chat
                 </CardTitle>
               </CardHeader>

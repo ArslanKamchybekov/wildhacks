@@ -27,42 +27,34 @@ export async function generateRoast(
     const activeSession = await getCurrentActiveSession(userId);
     console.log('Active session:', activeSession);
     
-    console.log(user);
-    
-    // Find the user's group by checking all groups
+    // Find a group where the user is a member
+    // Since members is stored as a JSON string, we need to query all groups
+    // and check if the user's email is in the parsed members array
     const allGroups = await Group.find({});
-    let groupData = null;
+    let group = null;
+    let groupContext = ``;
     
-    // Loop through all groups and check if the user's email is in the members array
-    for (const group of allGroups) {
+    for (const g of allGroups) {
       try {
-        const membersArray = JSON.parse(group.members);
+        const membersArray = JSON.parse(g.members);
         if (membersArray.includes(user.email)) {
-          groupData = group;
+          group = g;
+          groupContext = `
+            Group Name: ${g.name}
+            Group Members: ${membersArray.join(', ')}
+          `;
           break;
         }
-      } catch (e) {
-        console.error('Error parsing group members:', e);
+      } catch (error) {
+        console.error('Error parsing group members:', error);
       }
     }
     
-    if (!groupData) {
-      throw new Error('Group not found for user: ' + user.email);
+    if (!group) {
+      console.log('No group found for user:', user.email);
+      // Instead of throwing an error, create a personal roast without group context
+      console.log('Using personal roast without group context');
     }
-
-    console.log(groupData);
-    
-    // Parse the members JSON string to get an array
-    const members = JSON.parse(groupData.members);
-    
-    // Create group context for Gemini
-    const group = {
-      id: groupData._id.toString(),
-      name: groupData.name,
-      members: members
-    };
-
-    console.log(group);
     
     // Only use the current user's tick data
     let ticks: any[] = [];
@@ -144,19 +136,36 @@ export async function generateRoast(
       // Generate roast with appropriate context
       roastContent = await generateRoastForUser(
         user.name || user.email.split('@')[0], // Use name or first part of email
-        'distracted', // Behavior description
-        focus === 'distracted' ? 'looking away from the screen' : emotion, // Details based on focus/emotion
+        focus, // Pass focus directly
+        emotion, // Pass emotion directly
         ticks,
         isEmptyUrl ? undefined : current_tab_url, // Only pass URL if it's valid
-        isEmptyUrl ? undefined : alignmentReason // Only pass alignment reason if URL is valid
+        isEmptyUrl ? undefined : alignmentReason, // Only pass alignment reason if URL is valid
+        activeSession?.goal // Pass the active session goal if available
       );
     } else {
       console.log('URL aligns with session goal. No roast needed.');
       return ''; // Return empty string to indicate no roast needed
     }
 
-    console.log(roastContent);
-    
+    // Save the roast if we have a group
+    if (group) {
+      await saveRoast(
+        group._id.toString(),
+        user._id,
+        roastContent,
+        group.geminiRoastLevel // Use geminiRoastLevel from the group model
+      );
+    } else {
+      // Save roast without group context
+      await saveRoast(
+        'personal', // Use 'personal' as groupId for personal roasts
+        user._id,
+        roastContent,
+        5 // Default roast level
+      );
+    }
+      
     return roastContent;
   } catch (error) {
     console.error('Error generating roast:', error);
@@ -171,7 +180,7 @@ export async function saveRoast(
   group_id: string,
   target_user_id: string,
   roast_content: string,
-  roast_level: number = 5
+  roast_level: number
 ): Promise<any> {
   await connectToDatabase();
   
