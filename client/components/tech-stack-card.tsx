@@ -1,39 +1,32 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import {
-  Code2,
-  Database,
-  Lock,
-  CreditCard,
-  Brain,
-  Camera,
-  Palette,
-  Zap,
-  Mail,
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react"
+import { Code2, Database, Lock, Brain, Camera, Palette, Zap, Mail } from "lucide-react"
+import { motion } from "framer-motion"
+import { useTheme } from "next-themes"
 
 export default function TechStackCard() {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [isVisible, setIsVisible] = useState(false)
+  const { theme } = useTheme()
+  const isDarkTheme = theme === "dark"
 
   useEffect(() => {
     const handleScroll = () => {
-      const element = document.getElementById("tech-stack");
+      const element = document.getElementById("tech-stack")
       if (element) {
-        const position = element.getBoundingClientRect();
+        const position = element.getBoundingClientRect()
         if (position.top < window.innerHeight * 0.75) {
-          setIsVisible(true);
+          setIsVisible(true)
         }
       }
-    };
+    }
 
-    window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Check on initial load
+    window.addEventListener("scroll", handleScroll)
+    handleScroll() // Check on initial load
 
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const technologies = [
     {
@@ -48,8 +41,7 @@ export default function TechStackCard() {
     {
       name: "MongoDB",
       icon: <Database className="h-6 w-6" />,
-      description:
-        "Flexible document database for storing user goals and progress",
+      description: "Flexible document database for storing user goals and progress",
       color: "from-green-500 to-emerald-400",
       shadowColor: "rgba(16, 185, 129, 0.5)",
       borderColor: "border-green-500/30",
@@ -85,8 +77,7 @@ export default function TechStackCard() {
     {
       name: "OpenCV",
       icon: <Camera className="h-6 w-6" />,
-      description:
-        "Computer vision for virtual pet animations and interactions",
+      description: "Computer vision for virtual pet animations and interactions",
       color: "from-amber-500 to-yellow-400",
       shadowColor: "rgba(245, 158, 11, 0.5)",
       borderColor: "border-amber-500/30",
@@ -95,8 +86,7 @@ export default function TechStackCard() {
     {
       name: "TensorFlow",
       icon: <Zap className="h-6 w-6" />,
-      description:
-        "Machine learning framework for goal prediction and analysis",
+      description: "Machine learning framework for goal prediction and analysis",
       color: "from-indigo-500 to-blue-400",
       shadowColor: "rgba(99, 102, 241, 0.5)",
       borderColor: "border-indigo-500/30",
@@ -105,14 +95,13 @@ export default function TechStackCard() {
     {
       name: "Nodemailer",
       icon: <Mail className="h-6 w-6" />,
-      description:
-        "Email sending functionality for notifications and communications",
+      description: "Email sending functionality for notifications and communications",
       color: "from-purple-500 to-violet-400",
       shadowColor: "rgba(168, 85, 247, 0.5)",
       borderColor: "border-purple-500/30",
       bgGlow: "bg-purple-500/10",
     },
-  ];
+  ]
 
   const container = {
     hidden: { opacity: 0 },
@@ -122,26 +111,25 @@ export default function TechStackCard() {
         staggerChildren: 0.1,
       },
     },
-  };
+  }
 
   const item = {
     hidden: { y: 20, opacity: 0 },
     show: { y: 0, opacity: 1 },
-  };
+  }
 
   return (
-    <div
-      id="tech-stack"
-      className="w-full max-w-7xl mx-auto py-20 px-4 relative overflow-hidden"
-    >
-      {/* Background glow effects */}
+    <div id="tech-stack" className="w-full max-w-7xl mx-auto py-20 px-4 relative overflow-hidden">
+      {/* Background glow effects - theme aware */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-3xl -z-10"></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900/0 to-black -z-20"></div>
+      <div
+        className={`absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] ${isDarkTheme ? "from-slate-900/0 to-black" : "from-slate-100/0 to-white"} -z-20`}
+      ></div>
 
       {/* Heading with animated underline */}
       <div className="text-center mb-16 relative">
         <motion.h2
-          className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300"
+          className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70"
           initial={{ opacity: 0, y: -20 }}
           animate={isVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
@@ -155,13 +143,12 @@ export default function TechStackCard() {
           transition={{ duration: 0.8, delay: 0.3 }}
         />
         <motion.p
-          className="text-gray-300 max-w-2xl mx-auto mt-6 text-lg"
+          className="text-muted-foreground max-w-2xl mx-auto mt-6 text-lg"
           initial={{ opacity: 0 }}
           animate={isVisible ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
-          Waddl combines these powerful technologies to create a seamless,
-          intelligent goal-tracking experience
+          Waddl combines these powerful technologies to create a seamless, intelligent goal-tracking experience
         </motion.p>
       </div>
 
@@ -178,14 +165,11 @@ export default function TechStackCard() {
             className={`
               relative rounded-xl overflow-hidden backdrop-blur-sm
               border ${tech.borderColor}
-              ${hoveredIndex === index ? tech.bgGlow : "bg-black/40"}
+              ${hoveredIndex === index ? tech.bgGlow : isDarkTheme ? "bg-black/40" : "bg-white/40"}
               transition-all duration-300
             `}
             style={{
-              boxShadow:
-                hoveredIndex === index
-                  ? `0 0 25px ${tech.shadowColor}`
-                  : "none",
+              boxShadow: hoveredIndex === index ? `0 0 25px ${tech.shadowColor}` : "none",
             }}
             variants={item}
             onMouseEnter={() => setHoveredIndex(index)}
@@ -220,9 +204,8 @@ export default function TechStackCard() {
                   text-xl font-bold mb-3
                   ${
                     hoveredIndex === index
-                      ? "bg-clip-text text-transparent bg-gradient-to-r " +
-                        tech.color
-                      : "text-white"
+                      ? "bg-clip-text text-transparent bg-gradient-to-r " + tech.color
+                      : "text-foreground"
                   }
                   transition-all duration-300
                 `}
@@ -231,7 +214,7 @@ export default function TechStackCard() {
                 </h3>
 
                 {/* Description */}
-                <p className="text-gray-300 text-sm">{tech.description}</p>
+                <p className="text-muted-foreground text-sm">{tech.description}</p>
               </div>
             </div>
 
@@ -247,5 +230,6 @@ export default function TechStackCard() {
         ))}
       </motion.div>
     </div>
-  );
+  )
 }
+
