@@ -13,8 +13,6 @@ import {
 export async function POST(req: NextRequest) {
   try {
     // Parse the request body
-    const session = await getSession();
-    console.log('Session:', session);
     const body = await req.json();
     const {
       emotion,
