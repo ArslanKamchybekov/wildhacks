@@ -9,7 +9,7 @@ We set out to build an app that goes beyond the typical productivity reminder. D
 ## What It Does 🦆
 
 - **Real-Time Productivity**: Monitor your progress with a dynamic web app.
-- **Virtual Duck Companion**: Bond with a cute duck via your webcam. If you slack off and miss your goals, **the duck dies**.
+- **Virtual Duck Companion**: Bond with a cute duck via your webcam (and give it a thumbs up/wave, trust us!). If you slack off and miss your goals, **the duck dies**.
 - **Shared Experience**: Raise a duck with friends and even place bets on your commitments using real money.
 - **Motivational Roasts**: Get encouraging—and sometimes brutally honest—roasts powered by Gemini AI.
 
@@ -21,8 +21,6 @@ Our tech stack and tools helped us bring Waddl to life:
   - Next.js, Tailwind CSS, ShadCn, Three.js for a fast, modern, and engaging UI.
 - **Backend & Authentication**:
   - MongoDB & Auth0 for a secure backend and user management.
-- **Real-Money Integration**:
-  - Stripe to handle real-money bets on your goals.
 - **Browser Monitoring**:
   - Chrome Extension API to track your activity in real time.
 - **Computer Vision**:
