@@ -1,6 +1,6 @@
 # Waddl: The Ultimate Productivity App 🦆
 
-Waddl is a real-time productivity computer vision web app with a twist—a virtual duck companion that holds you accountable. It's not just a reminder to focus; it **DEMANDS** you meet your goals, blending fun, accountability, and a little bit of chaos into your daily routine.
+Waddl is a real-time productivity computer vision web app with a twist—a virtual duck companion that holds you accountable (and may take your money!). It's not just a reminder to focus; it **DEMANDS** you meet your goals, blending fun, accountability, and a little bit of chaos into your daily routine.
 
 ## Inspiration
 
