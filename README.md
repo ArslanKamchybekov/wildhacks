@@ -24,7 +24,7 @@ Our tech stack and tools helped us bring Waddl to life:
 - **Browser Monitoring**:
   - Chrome Extension API to track your activity in real time.
 - **Financial Integration**:
-  - Real money betting for real goal commitments.
+  - Real money betting for real goal commitments with Stripe.
 - **Computer Vision**:
   - OpenCV, MediaPipe, DeepFace for face, gaze, and gesture tracking along with emotion analysis.
 - **Communication**:
