@@ -4,10 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import Message, { IMessage } from "@/models/message.model";
 import twilio from "twilio";
 
-const accountSID = "AC59cdce9d3c1bf57b08638f8adac95221";
-const authToken = "12e87697c96629ba1fa27ddd98d84445";
-
-const client = twilio(accountSID, authToken);
+const client = twilio(process.env.TWILIO_ACCOUNTID, process.env.TWILIO_TOKEN);
 /**
  * Get messages by group ID
  */
