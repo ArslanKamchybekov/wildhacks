@@ -255,11 +255,11 @@ export default function Home() {
                     </motion.svg>
                   </div>
                   {/* Card Content */}
-                  <div className="relative z-10">
+                  <div className="relative z-10 flex flex-col items-center w-full">
                     <div className="flex items-center justify-center rounded-full bg-primary/10 p-4 group-hover:bg-primary/20 transition-colors">
                       {feature.icon}
                     </div>
-                    <h3 className="text-2xl font-bold">{feature.title}</h3>
+                    <h3 className="text-2xl font-bold mt-4">{feature.title}</h3>
                     <p className="text-muted-foreground text-lg">
                       {feature.description}
                     </p>
