@@ -10,6 +10,7 @@ import {
   Camera,
   Palette,
   Zap,
+  Mail,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -64,15 +65,6 @@ export default function TechStackCard() {
       bgGlow: "bg-red-500/10",
     },
     {
-      name: "Stripe",
-      icon: <CreditCard className="h-6 w-6" />,
-      description: "Payment processing for goal stakes and subscriptions",
-      color: "from-purple-500 to-violet-400",
-      shadowColor: "rgba(168, 85, 247, 0.5)",
-      borderColor: "border-purple-500/30",
-      bgGlow: "bg-purple-500/10",
-    },
-    {
       name: "Gemini",
       icon: <Brain className="h-6 w-6" />,
       description: "AI model for natural language goal processing",
@@ -109,6 +101,16 @@ export default function TechStackCard() {
       shadowColor: "rgba(99, 102, 241, 0.5)",
       borderColor: "border-indigo-500/30",
       bgGlow: "bg-indigo-500/10",
+    },
+    {
+      name: "Nodemailer",
+      icon: <Mail className="h-6 w-6" />,
+      description:
+        "Email sending functionality for notifications and communications",
+      color: "from-purple-500 to-violet-400",
+      shadowColor: "rgba(168, 85, 247, 0.5)",
+      borderColor: "border-purple-500/30",
+      bgGlow: "bg-purple-500/10",
     },
   ];
 
